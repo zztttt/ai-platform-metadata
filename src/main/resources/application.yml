@@ -1,0 +1,18 @@
+spring:
+  profiles:
+    active: prod
+
+  datasource:
+    username: fields_code
+    password: Fields+123
+    url: jdbc:mysql://rm-uf68frea8d8ny3sn8ao.mysql.rds.aliyuncs.com:3306/customer_db?useSSL=false&characterEncoding=utf-8&serverTimezone=GMT%2B8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+
+  #spring:
+  jackson: #返回json的全局时间格式
+    date-format: yyyy-MM-dd hh:mm:ss
+    time-zone: GMT+8
+#    default-property-inclusion: non_null
+
