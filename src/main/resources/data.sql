@@ -20,6 +20,7 @@ CREATE TABLE metadatadetail
     windcolumn VARCHAR(40) NULL,
     dbcolumn VARCHAR(40) NULL,
     usercolumn VARCHAR(40) NULL,
+    type VARCHAR(20) NULL,
     PRIMARY KEY (id)
 );
 
@@ -37,10 +38,10 @@ INSERT INTO metadata (id, tablename, func, updatetime, updateuser) VALUES
 (2, "table2", "wss", "20190602", "zzt2"),
 (3, "table3", "wsd", "20190603", "zzt3");
 
-INSERT INTO metadatadetail (id, tablename, windcolumn, dbcolumn, usercolumn) VALUES
-(1, "table1", "windcolumn1", "dbcolumn1", "usercolumn1"),
-(2, "table2", "windcolumn2", "dbcolumn2", "usercolumn2"),
-(3, "table3", "windcolumn3", "dbcolumn3", "usercolumn3");
+INSERT INTO metadatadetail (id, tablename, windcolumn, dbcolumn, usercolumn, type) VALUES
+(1, "table1", "windcolumn1", "dbcolumn1", "usercolumn1", "varchar(8)"),
+(2, "table2", "windcolumn2", "dbcolumn2", "usercolumn2", "varchar(8)"),
+(3, "table3", "windcolumn3", "dbcolumn3", "usercolumn3", "varchar(8)");
 
 INSERT INTO task (id, username, tablename, description) VALUES
 (1, "user1", "table1", "des1"),

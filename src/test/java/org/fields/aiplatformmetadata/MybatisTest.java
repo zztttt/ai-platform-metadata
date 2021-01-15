@@ -46,11 +46,16 @@ public class MybatisTest {
     }
 
     @Test
-    public void updateOneTest(){
+    public void updateOneAndRestoreTest(){
         UpdateWrapper<Metadata> updateWrapper = new UpdateWrapper<>();
         updateWrapper.eq("tableName", "table1").eq("func", "wsd")
                     .set("tableName", "new_table1").set("func", "WSD");
         int ret = metadataMapper.update(null, updateWrapper);
+        Assert.assertEquals(1, ret);
+        updateWrapper.clear();
+        updateWrapper.eq("tableName", "new_table1").eq("func", "WSD")
+                .set("tableName", "table1").set("func", "wsd");
+        ret = metadataMapper.update(null, updateWrapper);
         Assert.assertEquals(1, ret);
     }
 

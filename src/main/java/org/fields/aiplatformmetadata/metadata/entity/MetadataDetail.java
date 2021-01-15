@@ -19,4 +19,6 @@ public class MetadataDetail {
     private String dbColumn;
     @TableField("userColumn")
     private String userColumn;
+    @TableField("type")
+    private String type;
 }
