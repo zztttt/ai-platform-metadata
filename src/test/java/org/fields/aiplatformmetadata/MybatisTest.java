@@ -29,6 +29,8 @@ public class MybatisTest {
 
     @Test
     public void selectListTest() {
+        List<Metadata> metadataList = metadataMapper.selectList(null);
+        metadataList.forEach(System.out::println);
         List<MetadataDetail> metadataDetailList = metadataDetailMapper.selectList(null);
         metadataDetailList.forEach(System.out::println);
         List<Task> taskList = taskMapper.selectList(null);

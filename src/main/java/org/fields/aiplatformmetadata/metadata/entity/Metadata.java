@@ -15,4 +15,8 @@ public class Metadata {
     private String tableName;
     @TableField("func")
     private String func;
+    @TableField("updateTime")
+    private String updateTime;
+    @TableField("updateUser")
+    private String updateUser;
 }
