@@ -10,10 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
@@ -30,7 +27,7 @@ public class MetadataServiceTest {
     }
     @Test
     public void step2_insertTableMetadataDetailTest(){
-        Set<Map<String, String>> set = new HashSet<Map<String, String>>(){{
+        List<Map<String, String>> list = new ArrayList<Map<String, String>>(){{
             add(new HashMap<String, String>(){{
                 put("tableName", "AShareEODPrices");
                 put("windColumn", "windcode");
@@ -109,7 +106,7 @@ public class MetadataServiceTest {
                 put("type", "varchar(10)");
             }});
         }};
-        metadataService.insertTableMetadataDetail(set);
+        metadataService.insertTableMetadataDetail(list);
     }
 
     @Test

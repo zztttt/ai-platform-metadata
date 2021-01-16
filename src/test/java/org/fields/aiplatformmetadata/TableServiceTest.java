@@ -34,7 +34,7 @@ public class TableServiceTest {
     @Before
     public void init(){
         Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
-        Set<Map<String, String>> set = new HashSet<Map<String, String>>(){{
+        List<Map<String, String>> list = new ArrayList<Map<String, String>>(){{
             add(new HashMap<String, String>(){{
                 put("tableName", oldTableName);
                 put("windColumn", "windcode");
@@ -113,7 +113,7 @@ public class TableServiceTest {
                 put("type", "varchar(10)");
             }});
         }};
-        Assert.assertTrue(metadataService.insertTableMetadataDetail(set));
+        Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
     }
     @Test
     public void createTable1Test() throws Exception{

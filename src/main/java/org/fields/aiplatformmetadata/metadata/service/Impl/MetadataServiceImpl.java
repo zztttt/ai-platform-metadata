@@ -13,6 +13,7 @@ import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import lombok.*;
@@ -97,27 +98,43 @@ public class MetadataServiceImpl implements MetadataService {
         log.info("insertTableMetadata: {} line", ret);
         return ret == 1;
     }
+    private boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type){
+        MetadataDetail metadataDetail = new MetadataDetail();
+        metadataDetail.setTableName(tableName);
+        metadataDetail.setWindColumn(windColumn);
+        metadataDetail.setDbColumn(dbcolumn);
+        metadataDetail.setUserColumn(userColumn);
+        metadataDetail.setType(type);
+        // query whether already exists
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName)
+                    .eq("windColumn", windColumn)
+                    .eq("dbColumn", dbcolumn)
+                    .eq("userColumn", userColumn)
+                    .eq("type", type);
+        if(metadataDetailMapper.selectOne(queryWrapper) != null){
+            log.info("insertTableMetadataOneDetail error. {} {} is already exists", tableName, dbcolumn);
+            throw new ApiException("insertTableMetadataOneDetail error");
+        }
+        int ret = metadataDetailMapper.insert(metadataDetail);
+        return ret == 1;
+    }
+
     /**
      * @param set 包含对一个table的每个字段的具体值的说明。 eg tableName，windColumn， dbColumn, userColumn, type
      *        map 对MetadataDetail的的值进行说明
      * @return boolean
      */
     @Override
-    public boolean insertTableMetadataDetail(Set<Map<String, String>> set){
+    public boolean insertTableMetadataDetail(List<Map<String, String>> list){
         boolean status = true;
-        for(Map<String, String> map: set){
+        for(Map<String, String> map: list){
             assert map.size() == 5 && map.containsKey("tableName") && map.containsKey("windColumn")
                     && map.containsKey("dbColumn") && map.containsKey("userColumn") && map.containsKey("type");
-            MetadataDetail metadataDetail = new MetadataDetail();
-            metadataDetail.setTableName(map.get("tableName"));
-            metadataDetail.setWindColumn(map.get("windColumn"));
-            metadataDetail.setDbColumn(map.get("dbColumn"));
-            metadataDetail.setUserColumn(map.get("userColumn"));
-            metadataDetail.setType(map.get("type"));
-            int ret = metadataDetailMapper.insert(metadataDetail);
-            status = status && (ret == 1);
+            boolean ret = insertTableMetadataOneDetail(map.get("tableName"), map.get("windColumn"), map.get("dbColumn"), map.get("userColumn"), map.get("type"));
+            status = status && ret;
         }
-        log.info("insertTableMetadataDetail: {} line", set.size());
+        log.info("insertTableMetadataDetail: {} line", list.size());
         return status;
     }
 
