@@ -1,5 +1,6 @@
 package org.fields.aiplatformmetadata;
 
+import org.fields.aiplatformmetadata.metadata.entity.Metadata;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -19,10 +20,13 @@ public class MetadataServiceTest {
     @Autowired
     MetadataService metadataService;
 
+    private final String tableName = "AShareEODPrices";
+
+
     @Test
     public void step1_insertTableMetadataTest(){
         Assert.assertTrue(metadataService.insertTableMetadata(
-                "AShareEODPrices", "wsd",
+                tableName, "wsd",
                 "20190601", "zzt"));
     }
     @Test
@@ -110,11 +114,21 @@ public class MetadataServiceTest {
     }
 
     @Test
-    public void step3_deleteTableMetadataTest(){
-        Assert.assertTrue(metadataService.deleteTableMetadata("AShareEODPrices"));
+    public void step3_updateMetadata(){
+        Metadata metadata = metadataService.queryMetadata(tableName);
+        String oldUpdateTime = metadata.getUpdateTime(), oldUpdateUser = metadata.getUpdateUser();
+        Assert.assertTrue(metadataService.updateMetadata(tableName, "test", "test"));
+        Assert.assertTrue(metadataService.updateMetadata(tableName, oldUpdateTime, oldUpdateUser));
+    }
+
+    @Test
+    public void step4_deleteTableMetadataTest(){
+        Assert.assertTrue(metadataService.deleteTableMetadata(tableName));
     }
     @Test
-    public void step4_deleteTableMetadataDetailTest(){
-        Assert.assertTrue(metadataService.deleteTableMetadataDetail("AShareEODPrices"));
+    public void step5_deleteTableMetadataDetailTest(){
+        Assert.assertTrue(metadataService.deleteTableMetadataDetail(tableName));
     }
+
+
 }

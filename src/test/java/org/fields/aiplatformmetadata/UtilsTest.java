@@ -1,7 +1,6 @@
 package org.fields.aiplatformmetadata;
 
 import org.fields.aiplatformmetadata.metadata.Utils;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;

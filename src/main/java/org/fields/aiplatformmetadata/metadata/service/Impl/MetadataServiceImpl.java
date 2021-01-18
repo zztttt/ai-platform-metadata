@@ -1,6 +1,7 @@
 package org.fields.aiplatformmetadata.metadata.service.Impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.entity.Metadata;
@@ -15,8 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import lombok.*;
 
 @Slf4j
 @Service
@@ -46,12 +45,23 @@ public class MetadataServiceImpl implements MetadataService {
         return false;
     }
 
+    /**
+     * @param tableName 数据库表名
+     * @return Metadata
+     */
     @Override
     public Metadata queryMetadata(String tableName) {
-        // TODO
-        return null;
+        QueryWrapper<Metadata> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName);
+        Metadata metadata = metadataMapper.selectOne(queryWrapper);
+        return metadata;
     }
 
+    /**
+     * @param tableName 数据库表名
+     * @param windColumn 指定的wind field
+     * @return boolean
+     */
     @Override
     public boolean isColumnExist(String tableName, String windColumn) {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
@@ -116,12 +126,9 @@ public class MetadataServiceImpl implements MetadataService {
         // query whether already exists
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName)
-                    .eq("windColumn", windColumn)
-                    .eq("dbColumn", dbcolumn)
-                    .eq("userColumn", userColumn)
-                    .eq("type", type);
+                    .eq("windColumn", windColumn);
         if(metadataDetailMapper.selectOne(queryWrapper) != null){
-            log.info("insertTableMetadataOneDetail error. {} {} is already exists", tableName, dbcolumn);
+            log.info("insertTableMetadataOneDetail error. {} {} is already exists", tableName, windColumn);
             throw new ApiException("insertTableMetadataOneDetail error");
         }
         int ret = metadataDetailMapper.insert(metadataDetail);
@@ -201,5 +208,19 @@ public class MetadataServiceImpl implements MetadataService {
     public boolean deleteTask(String userName, String tableName) {
         // TODO
         return false;
+    }
+
+    /**
+     * @param tableName 数据库表名
+     * @param updateTime 最后一次更新时间
+     * @param updateUser 最后一次更新用户
+     * @return boolean
+     */
+    @Override
+    public boolean updateMetadata(String tableName, String updateTime, String updateUser) {
+        UpdateWrapper<Metadata> updateWrapper = new UpdateWrapper<>();
+        updateWrapper.eq("tableName", tableName).set("updateTime", updateTime).set("updateUser", updateUser);
+        int ret = metadataMapper.update(null, updateWrapper);
+        return ret == 1;
     }
 }

@@ -3,12 +3,11 @@ package org.fields.aiplatformmetadata.metadata.service.Impl;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.Utils;
-import org.fields.aiplatformmetadata.metadata.entity.Metadata;
-import org.fields.aiplatformmetadata.metadata.mapper.MetadataMapper;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
 
 import java.util.*;
 
@@ -18,48 +17,67 @@ public class TableServiceImpl implements TableService {
     @Autowired
     MetadataService metadataService;
 
-    @Override
-    public boolean initRootTables() {
-        List<Map<String, String>> list1 = new ArrayList<Map<String, String>>(){{
-            add(new HashMap<String, String>(){{
-                put("tableName", "wind_AShareEODPrices");
-                put("windColumn", "windcode");
-                put("dbColumn", "s_info_windcode");
-                put("userColumn", "wind代码");
-                put("type", "varchar(10)");
-            }});
-        }};
-        List<Map<String, String>> list2 = new ArrayList<Map<String, String>>(){{
-           add(new HashMap<String, String>(){{
-               put("tableName", "wind_CCommidityFuturesEODPrices");
-               put("windColumn", "windcode");
-               put("dbColumn", "s_info_windcode");
-               put("userColumn", "wind代码");
-               put("type", "varchar(10)");
-            }});
-        }};
-        List<String> list3 = new ArrayList<String>(){{
-            add(list1.get(0).get("dbColumn"));
-        }};
-        boolean status = true;
-        status = status && metadataService.insertTableMetadata(rootTables.get("行情_A股"), "wsd", "20190601", "zzt1");
-        status = status && metadataService.insertTableMetadataDetail(list1);
-        status = status && createTableBase(rootTables.get("行情_A股"),
-                new ArrayList<String>(){{ add(list1.get(0).get("dbColumn"));}},
-                new ArrayList<String>(){{ add(list1.get(0).get("type"));}});
+    private List<Map<String, String>> list1 = new ArrayList<Map<String, String>>(){{
+        add(new HashMap<String, String>(){{
+            put("tableName", "wind_AShareEODPrices");
+            put("windColumn", "windcode");
+            put("dbColumn", "s_info_windcode");
+            put("userColumn", "wind代码");
+            put("type", "varchar(10)");
+        }});
+    }};
+    private List<Map<String, String>> list2 = new ArrayList<Map<String, String>>(){{
+        add(new HashMap<String, String>(){{
+            put("tableName", "wind_CCommidityFuturesEODPrices");
+            put("windColumn", "windcode");
+            put("dbColumn", "s_info_windcode");
+            put("userColumn", "wind代码");
+            put("type", "varchar(10)");
+        }});
+    }};
 
-        status = status && metadataService.insertTableMetadata(rootTables.get("行情期货"), "wsd", "20190601", "zzt2");
-        status = status && metadataService.insertTableMetadataDetail(list2);
-        status = status && createTableBase(rootTables.get("行情期货"),
-                new ArrayList<String>(){{ add(list2.get(0).get("dbColumn"));}},
-                new ArrayList<String>(){{ add(list2.get(0).get("type"));}});
+    /**
+     * 初始化十三个历史数据库表，在最开始调用一次即可
+     * @return boolean
+     */
+    @Override
+    public boolean checkAndInitRootTables() {
+        boolean status = true;
+        if(metadataService.isTableExisting(rootTables.get("行情_A股")) == false) {
+            log.info("{} is not existing, create it.", "行情_A股");
+            status = status && metadataService.insertTableMetadata(rootTables.get("行情_A股"), "wsd", "20190601", "zzt1");
+            status = status && metadataService.insertTableMetadataDetail(list1);
+            status = status && createTableBase(rootTables.get("行情_A股"),
+                    new ArrayList<String>() {{
+                        add(list1.get(0).get("dbColumn"));
+                    }},
+                    new ArrayList<String>() {{
+                        add(list1.get(0).get("type"));
+                    }});
+        }
+
+        if(metadataService.isTableExisting(rootTables.get("行情期货")) == false) {
+            log.info("{} is not existing, create it", "行情期货");
+            status = status && metadataService.insertTableMetadata(rootTables.get("行情期货"), "wsd", "20190601", "zzt2");
+            status = status && metadataService.insertTableMetadataDetail(list2);
+            status = status && createTableBase(rootTables.get("行情期货"),
+                    new ArrayList<String>() {{
+                        add(list2.get(0).get("dbColumn"));
+                    }},
+                    new ArrayList<String>() {{
+                        add(list2.get(0).get("type"));
+                    }});
+        }
         return status;
     }
 
+    /**
+     * 删除所有数据库表格，用于单元测试，一般情况下不要用它
+     * @return boolean
+     */
     @Override
     public boolean deleteRootTables() {
-        boolean status = true;
-        status = status && metadataService.deleteTableMetadata(rootTables.get("行情_A股"));
+        boolean status = metadataService.deleteTableMetadata(rootTables.get("行情_A股"));
         status = status && metadataService.deleteTableMetadataDetail(rootTables.get("行情_A股"));
         status = status && deleteTable(rootTables.get("行情_A股"));
         status = status && metadataService.deleteTableMetadata(rootTables.get("行情期货"));
@@ -68,6 +86,12 @@ public class TableServiceImpl implements TableService {
         return status;
     }
 
+    /**
+     * @param tableName 数据库表名字
+     * @param columns 数据库表每列的名字
+     * @param columnTypes 数据库表每列的类型
+     * @return boolean
+     */
     @Override
     public boolean createTableBase(String tableName, List<String> columns, List<String> columnTypes) {
         log.info("createTableBase: {}, {} columns", tableName, columns.size());
@@ -82,11 +106,14 @@ public class TableServiceImpl implements TableService {
 
     /**
      * @param oldTableName 这个必须是已经存在的表，用户只允许从最大的表选择指定的列来创建新表
-     * @param functionName
-     * @param updateTime
-     * @param updateUser
-     * @param userColumns
-     * @return
+     * @param newTableName
+     * @param functionName 这个表所使用的wind函数类型
+     * @param updateTime 最后一次更新该表的时间
+     * @param updateUser 最后一次更新该表的用户
+     * @param windColumns wind里对应的field
+     * @param dbColumns 在数据库中存储该列的列名
+     * @param userColumns 用户看到的该列的列名，默认情况下和dbColumns相同，可以自定义
+     * @return boolean
      */
     @Override
     public boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, List<String> windColumns, List<String> dbColumns, List<String> userColumns, List<String> types) throws Exception{
@@ -106,7 +133,7 @@ public class TableServiceImpl implements TableService {
                     dbColumns.set(i, userColumn);
                 }
                 addNewColumn(oldTableName, windColumn, dbColumn, userColumn, type);
-                // TODO metadataService.updateMetadata
+                Assert.isTrue(metadataService.updateMetadata(oldTableName, updateTime, updateUser), "update success");
             }
             // add the metadataDetail
             String finalDbColumn = dbColumn;
@@ -126,6 +153,10 @@ public class TableServiceImpl implements TableService {
         return ret;
     }
 
+    /**
+     * @param tableName 数据库表名
+     * @return boolean
+     */
     @Override
     public boolean deleteTable(String tableName){
         log.info("deleteTable: {}", tableName);
@@ -138,6 +169,15 @@ public class TableServiceImpl implements TableService {
         }
     }
 
+    /**
+     * @param tableName 数据库表名
+     * @param newWindColumn 新增加的一列的wind field
+     * @param newDbColumn 新增加的一列在数据库中的列名
+     * @param newUserColumn 新增加的一列被用户看见的列名
+     * @param newColumnType 新增加的一列的类型
+     * @return boolean
+     * @throws Exception mysql执行上抛的exception
+     */
     @Override
     public boolean addNewColumn(String tableName, String newWindColumn, String newDbColumn, String newUserColumn, String newColumnType) throws Exception{
         log.info("addNewColumn: {} in table {}", newWindColumn, tableName);

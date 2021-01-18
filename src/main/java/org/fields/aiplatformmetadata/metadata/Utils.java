@@ -4,7 +4,6 @@ import java.util.List;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import java.util.ArrayList;
 
 public class Utils {
     public static boolean createTable(String tableName, List<String> columns, List<String> columnTypes) throws Exception{

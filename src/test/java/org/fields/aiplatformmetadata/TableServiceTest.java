@@ -1,6 +1,5 @@
 package org.fields.aiplatformmetadata;
 
-import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.junit.After;

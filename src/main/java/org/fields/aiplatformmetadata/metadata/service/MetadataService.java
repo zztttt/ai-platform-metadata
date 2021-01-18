@@ -1,11 +1,9 @@
 package org.fields.aiplatformmetadata.metadata.service;
 
 import org.fields.aiplatformmetadata.metadata.entity.Metadata;
-import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public interface MetadataService {
     boolean isTableExisting(String tableName);
@@ -25,4 +23,6 @@ public interface MetadataService {
     boolean deleteTableMetadata(String tableName);
     boolean deleteTableMetadataDetail(String tableName);
     boolean deleteTask(String userName, String tableName);
+
+    boolean updateMetadata(String tableName, String updateTime, String updateUser);
 }

@@ -17,7 +17,7 @@ public class CreateAndDeleteRootTablesTest {
 
     @Test
     public void Test(){
-        Assert.assertTrue(tableService.initRootTables());
+        Assert.assertTrue(tableService.checkAndInitRootTables());
     }
 
     @After
