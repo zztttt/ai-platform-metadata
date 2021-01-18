@@ -121,7 +121,7 @@ public class MetadataServiceImpl implements MetadataService {
     }
 
     /**
-     * @param set 包含对一个table的每个字段的具体值的说明。 eg tableName，windColumn， dbColumn, userColumn, type
+     * @param list 包含对一个table的每个字段的具体值的说明。 eg tableName，windColumn， dbColumn, userColumn, type
      *        map 对MetadataDetail的的值进行说明
      * @return boolean
      */
