@@ -52,6 +52,14 @@ public class MetadataServiceImpl implements MetadataService {
         return null;
     }
 
+    @Override
+    public boolean isColumnExist(String tableName, String windColumn) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("windColumn", windColumn);
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        return metadataDetail == null? false: true;
+    }
+
     private MetadataDetail queryMetadataDetailFromUserColumn(String tableName, String userColumn){
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName).eq("userColumn", userColumn);
@@ -98,7 +106,7 @@ public class MetadataServiceImpl implements MetadataService {
         log.info("insertTableMetadata: {} line", ret);
         return ret == 1;
     }
-    private boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type){
+    public boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type){
         MetadataDetail metadataDetail = new MetadataDetail();
         metadataDetail.setTableName(tableName);
         metadataDetail.setWindColumn(windColumn);

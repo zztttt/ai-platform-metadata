@@ -22,18 +22,16 @@ public class TableServiceTest {
     @Autowired
     TableService tableService;
 
-    private final String oldTableName = "AShareEODPrices";
-    private final String newTableName = "newTable";
+    private final String oldTableName = "wind_AShareEODPrices_test";
+    private final String newTableName1 = "newTable1";
     private final String functionName = "wsd";
     private final String oldUpdateTime = "20190602";
     private final String newUpdateTime = "20190603";
     private final String rootUpdateUser = "root";
     private final String updateUser = "zzt";
 
-
     @Before
     public void init(){
-        Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
         List<Map<String, String>> list = new ArrayList<Map<String, String>>(){{
             add(new HashMap<String, String>(){{
                 put("tableName", oldTableName);
@@ -113,24 +111,73 @@ public class TableServiceTest {
                 put("type", "varchar(10)");
             }});
         }};
+        List<String> columns = new ArrayList<String>(){{
+            add(list.get(0).get("dbColumn"));
+            add(list.get(1).get("dbColumn"));
+            add(list.get(2).get("dbColumn"));
+            add(list.get(3).get("dbColumn"));
+            add(list.get(4).get("dbColumn"));
+            add(list.get(5).get("dbColumn"));
+            add(list.get(6).get("dbColumn"));
+            add(list.get(7).get("dbColumn"));
+            add(list.get(8).get("dbColumn"));
+            add(list.get(9).get("dbColumn"));
+            add(list.get(10).get("dbColumn"));
+        }};
+        List<String> types = new ArrayList<String>(){{
+            add(list.get(0).get("type"));
+            add(list.get(1).get("type"));
+            add(list.get(2).get("type"));
+            add(list.get(3).get("type"));
+            add(list.get(4).get("type"));
+            add(list.get(5).get("type"));
+            add(list.get(6).get("type"));
+            add(list.get(7).get("type"));
+            add(list.get(8).get("type"));
+            add(list.get(9).get("type"));
+            add(list.get(10).get("type"));
+        }};
+        Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
         Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
+        Assert.assertTrue(tableService.createTableBase(oldTableName, columns, types));
     }
     @Test
     public void createTable1Test() throws Exception{
-        Set<String> userColumns = new HashSet<String>(){{
+        List<String> windColumns = new ArrayList<String>(){{
+            add("windcode");
+            add("lastradeday_s");
+            add("trade_status");
+            add("new_wind_column");
+        }};
+        List<String> dbColumns = new ArrayList<String>(){{
+            add("s_info_windcode_1");
+            add("trade_dt_1");
+            add("s_dq_tradestatus_1");
+            add(null);
+        }};
+        List<String> userColumns = new ArrayList<String>(){{
             add("wind代码");
             add("交易日期");
             add("交易状态");
+            add("new_user_column");
         }};
-        Assert.assertTrue(tableService.createTable(oldTableName, newTableName, functionName, newUpdateTime, updateUser, userColumns));
+        List<String> types = new ArrayList<String>(){{
+            add("varchar(10)");
+            add("varchar(11)");
+            add("varchar(12)");
+            add("varchar(13)");
+        }};
+        Assert.assertTrue(tableService.createTable(oldTableName, newTableName1, functionName, newUpdateTime, updateUser, windColumns, dbColumns, userColumns, types));
     }
 
     @After
     public void release(){
-        Assert.assertTrue(tableService.deleteTable(newTableName));
+        Assert.assertTrue(tableService.deleteTable(oldTableName));
         Assert.assertTrue(metadataService.deleteTableMetadata(oldTableName));
         Assert.assertTrue(metadataService.deleteTableMetadataDetail(oldTableName));
-        Assert.assertTrue(metadataService.deleteTableMetadata(newTableName));
-        Assert.assertTrue(metadataService.deleteTableMetadataDetail(newTableName));
+
+        Assert.assertTrue(tableService.deleteTable(newTableName1));
+        Assert.assertTrue(metadataService.deleteTableMetadata(newTableName1));
+        Assert.assertTrue(metadataService.deleteTableMetadataDetail(newTableName1));
     }
 }

@@ -42,4 +42,18 @@ public class Utils {
         conn.close();
         return true;
     }
+
+    public static boolean addNewColumn(String tableName, String column, String type) throws Exception{
+        Class.forName("com.mysql.cj.jdbc.Driver");
+
+        String url = "jdbc:mysql://rm-uf67ktcrjo69g32viko.mysql.rds.aliyuncs.com:3306/wind?useSSL=false&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true";
+        Connection conn = DriverManager.getConnection(url, "zzt", "Zzt19980924x");
+        Statement stat = conn.createStatement();
+
+        String sql = "alter table " + tableName + " add column " + column + " " + type + " null";
+        stat.executeUpdate(sql);
+        stat.close();
+        conn.close();
+        return true;
+    }
 }

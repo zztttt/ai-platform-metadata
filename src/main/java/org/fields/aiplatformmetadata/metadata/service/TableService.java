@@ -14,6 +14,8 @@ public interface TableService {
     boolean deleteRootTables();
 
     boolean createTableBase(String tableName, List<String> columns, List<String> columnTypes);
-    boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, Set<String> userColumns) throws Exception;
+    boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, List<String> windColumns, List<String> dbColumns, List<String> userColumns, List<String> types) throws Exception;
     boolean deleteTable(String tableName);
+
+    boolean addNewColumn(String tableName, String newWindColumn, String newDbColumn, String newUserColumn, String newColumnType) throws Exception;
 }

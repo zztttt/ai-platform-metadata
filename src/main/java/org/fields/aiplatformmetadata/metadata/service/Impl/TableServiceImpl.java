@@ -70,9 +70,11 @@ public class TableServiceImpl implements TableService {
 
     @Override
     public boolean createTableBase(String tableName, List<String> columns, List<String> columnTypes) {
+        log.info("createTableBase: {}, {} columns", tableName, columns.size());
         try{
             return Utils.createTable(tableName, columns, columnTypes);
         }catch (Exception e){
+            log.info("createTableBase: {}, {} columns error", tableName, columns.size());
             e.printStackTrace();
             return false;
         }
@@ -87,25 +89,31 @@ public class TableServiceImpl implements TableService {
      * @return
      */
     @Override
-    public boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, Set<String> userColumns) throws Exception{
+    public boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, List<String> windColumns, List<String> dbColumns, List<String> userColumns, List<String> types) throws Exception{
         if(!metadataService.isTableExisting(oldTableName)){
             log.info("createTable error: old table {} is not existing", oldTableName);
             throw new ApiException("createTable error: old table is not existing");
         }
-        ArrayList<String> dbColumns = new ArrayList<>();
-        ArrayList<String> types = new ArrayList<>();
         List<Map<String, String>> metadataDetails = new ArrayList<>();
-        for(String userColumn: userColumns){
-            String windColumn = metadataService.queryWindColumnFromUserColumn(oldTableName, userColumn);
-            String dbColumn = metadataService.queryDbColumnFromUserColumn(oldTableName, userColumn);
-            String type = metadataService.queryTypeFromUserColumn(oldTableName, userColumn);
-
-            dbColumns.add(dbColumn);
-            types.add(type);
+        int len = userColumns.size();
+        for(int i = 0; i < len; ++i){
+            String userColumn = userColumns.get(i), windColumn = windColumns.get(i), dbColumn = dbColumns.get(i), type = types.get(i);
+            // trigger addNewColumn
+            if(metadataService.isColumnExist(oldTableName, windColumn) == false){
+                log.info("table {} windColumn {} is not existing, trigger addNewColumn", oldTableName, windColumn);
+                if(dbColumn == null){
+                    dbColumn = userColumn;
+                    dbColumns.set(i, userColumn);
+                }
+                addNewColumn(oldTableName, windColumn, dbColumn, userColumn, type);
+                // TODO metadataService.updateMetadata
+            }
+            // add the metadataDetail
+            String finalDbColumn = dbColumn;
             metadataDetails.add(new HashMap<String, String>(){{
                 put("tableName", newTableName);
                 put("windColumn", windColumn);
-                put("dbColumn", dbColumn);
+                put("dbColumn", finalDbColumn);
                 put("userColumn", userColumn);
                 put("type", type);
             }});
@@ -120,6 +128,7 @@ public class TableServiceImpl implements TableService {
 
     @Override
     public boolean deleteTable(String tableName){
+        log.info("deleteTable: {}", tableName);
         try {
             Utils.deleteTable(tableName);
             return true;
@@ -128,4 +137,17 @@ public class TableServiceImpl implements TableService {
             return false;
         }
     }
+
+    @Override
+    public boolean addNewColumn(String tableName, String newWindColumn, String newDbColumn, String newUserColumn, String newColumnType) throws Exception{
+        log.info("addNewColumn: {} in table {}", newWindColumn, tableName);
+        if(metadataService.isTableExisting(tableName) == false){{
+            log.info("addNewColumn error. table {} is not existing", tableName);
+            throw new ApiException("addNewColumn error");
+        }}
+        boolean status = metadataService.insertTableMetadataOneDetail(tableName, newWindColumn, newDbColumn, newUserColumn, newColumnType);
+        Utils.addNewColumn(tableName, newDbColumn, newColumnType);
+        return status;
+    }
+
 }
