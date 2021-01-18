@@ -38,11 +38,21 @@ public class TableServiceImpl implements TableService {
                put("type", "varchar(10)");
             }});
         }};
+        List<String> list3 = new ArrayList<String>(){{
+            add(list1.get(0).get("dbColumn"));
+        }};
         boolean status = true;
         status = status && metadataService.insertTableMetadata(rootTables.get("行情_A股"), "wsd", "20190601", "zzt1");
         status = status && metadataService.insertTableMetadataDetail(list1);
+        status = status && createTableBase(rootTables.get("行情_A股"),
+                new ArrayList<String>(){{ add(list1.get(0).get("dbColumn"));}},
+                new ArrayList<String>(){{ add(list1.get(0).get("type"));}});
+
         status = status && metadataService.insertTableMetadata(rootTables.get("行情期货"), "wsd", "20190601", "zzt2");
         status = status && metadataService.insertTableMetadataDetail(list2);
+        status = status && createTableBase(rootTables.get("行情期货"),
+                new ArrayList<String>(){{ add(list2.get(0).get("dbColumn"));}},
+                new ArrayList<String>(){{ add(list2.get(0).get("type"));}});
         return status;
     }
 
@@ -51,8 +61,10 @@ public class TableServiceImpl implements TableService {
         boolean status = true;
         status = status && metadataService.deleteTableMetadata(rootTables.get("行情_A股"));
         status = status && metadataService.deleteTableMetadataDetail(rootTables.get("行情_A股"));
+        status = status && deleteTable(rootTables.get("行情_A股"));
         status = status && metadataService.deleteTableMetadata(rootTables.get("行情期货"));
         status = status && metadataService.deleteTableMetadataDetail(rootTables.get("行情期货"));
+        status = status && deleteTable(rootTables.get("行情期货"));
         return status;
     }
 
