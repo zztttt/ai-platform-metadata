@@ -121,6 +121,10 @@ public class TableServiceImpl implements TableService {
             log.info("createTable error: old table {} is not existing", oldTableName);
             throw new ApiException("createTable error: old table is not existing");
         }
+        if(metadataService.isTableExisting(newTableName)){
+            log.info("createTable error: new table {} is already existing", newTableName);
+            throw new ApiException("createaTable error: new Table is already existing");
+        }
         List<Map<String, String>> metadataDetails = new ArrayList<>();
         int len = userColumns.size();
         for(int i = 0; i < len; ++i){
