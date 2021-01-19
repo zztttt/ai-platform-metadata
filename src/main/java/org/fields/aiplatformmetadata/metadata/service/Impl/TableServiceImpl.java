@@ -106,7 +106,7 @@ public class TableServiceImpl implements TableService {
 
     /**
      * @param oldTableName 这个必须是已经存在的表，用户只允许从最大的表选择指定的列来创建新表
-     * @param newTableName
+     * @param newTableName 这个是用户创建的表的名字，如果已经存在则上抛exception
      * @param functionName 这个表所使用的wind函数类型
      * @param updateTime 最后一次更新该表的时间
      * @param updateUser 最后一次更新该表的用户
