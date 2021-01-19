@@ -111,7 +111,7 @@ public class TableServiceImpl implements TableService {
      * @param updateTime 最后一次更新该表的时间
      * @param updateUser 最后一次更新该表的用户
      * @param windColumns wind里对应的field
-     * @param dbColumns 在数据库中存储该列的列名
+     * @param dbColumns 在数据库中存储该列的列名,可以为null
      * @param userColumns 用户看到的该列的列名，默认情况下和dbColumns相同，可以自定义
      * @return boolean
      */

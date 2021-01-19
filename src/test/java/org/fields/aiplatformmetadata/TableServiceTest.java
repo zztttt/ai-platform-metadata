@@ -171,12 +171,12 @@ public class TableServiceTest {
 
     @After
     public void release(){
-        Assert.assertTrue(tableService.deleteTable(oldTableName));
-        Assert.assertTrue(metadataService.deleteTableMetadata(oldTableName));
-        Assert.assertTrue(metadataService.deleteTableMetadataDetail(oldTableName));
+//        Assert.assertTrue(tableService.deleteTable(oldTableName));
+//        Assert.assertTrue(metadataService.deleteTableMetadata(oldTableName));
+//        Assert.assertTrue(metadataService.deleteTableMetadataDetail(oldTableName));
 
-        Assert.assertTrue(tableService.deleteTable(newTableName1));
-        Assert.assertTrue(metadataService.deleteTableMetadata(newTableName1));
-        Assert.assertTrue(metadataService.deleteTableMetadataDetail(newTableName1));
+//        Assert.assertTrue(tableService.deleteTable(newTableName1));
+//        Assert.assertTrue(metadataService.deleteTableMetadata(newTableName1));
+//        Assert.assertTrue(metadataService.deleteTableMetadataDetail(newTableName1));
     }
 }
