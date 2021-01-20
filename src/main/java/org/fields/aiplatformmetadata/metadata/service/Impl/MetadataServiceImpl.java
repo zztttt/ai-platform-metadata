@@ -82,7 +82,6 @@ public class MetadataServiceImpl implements MetadataService {
     }
     @Override
     public String queryDbColumnFromUserColumn(String tableName, String userColumn) {
-
         return queryMetadataDetailFromUserColumn(tableName, userColumn).getDbColumn();
     }
 
@@ -91,9 +90,32 @@ public class MetadataServiceImpl implements MetadataService {
         return queryMetadataDetailFromUserColumn(tableName, userColumn).getWindColumn();
     }
 
+
     @Override
     public String queryTypeFromUserColumn(String tableName, String userColumn) {
         return queryMetadataDetailFromUserColumn(tableName, userColumn).getType();
+    }
+
+    @Override
+    public MetadataDetail windColumn2MetadataDetail(String tableName, String windColumn) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("windColumn", windColumn);
+        List<MetadataDetail> metadataDetails = metadataDetailMapper.selectList(queryWrapper);
+        if(metadataDetails.size() != 1){
+            log.info("table {}, windColumn {} has {} lines. {}", tableName, windColumn, metadataDetails.size(), metadataDetails);
+            throw new ApiException("table windColumn count error.");
+        }
+        return metadataDetails.get(0);
+    }
+
+    @Override
+    public String windColumn2DbColumn(String tableName, String windColumn) {
+        return windColumn2MetadataDetail(tableName, windColumn).getDbColumn();
+    }
+
+    @Override
+    public String windColumn2UserColumn(String tableName, String windColumn) {
+        return windColumn2MetadataDetail(tableName, windColumn).getUserColumn();
     }
 
     /**

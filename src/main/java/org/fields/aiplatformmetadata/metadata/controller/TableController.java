@@ -37,7 +37,7 @@ public class TableController {
     public JSONObject create(@RequestBody CreateTable createTable) throws Exception{
         log.info("receive: {}", createTable);
         JSONObject ret = new JSONObject();
-        tableService.checkAndInitRootTables();
+        //tableService.checkAndInitRootTables();
         boolean status = tableService.createTable(
                 createTable.getOldTableName(),
                 createTable.getNewTableName(),

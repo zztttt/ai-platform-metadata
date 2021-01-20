@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 @Slf4j
@@ -16,6 +18,7 @@ import java.util.*;
 public class TableServiceImpl implements TableService {
     @Autowired
     MetadataService metadataService;
+    SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
     private List<Map<String, String>> list1 = new ArrayList<Map<String, String>>(){{
         add(new HashMap<String, String>(){{
@@ -191,6 +194,33 @@ public class TableServiceImpl implements TableService {
         }}
         boolean status = metadataService.insertTableMetadataOneDetail(tableName, newWindColumn, newDbColumn, newUserColumn, newColumnType);
         Utils.addNewColumn(tableName, newDbColumn, newColumnType);
+        return status;
+    }
+
+    @Override
+    public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) {
+        String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
+        String newDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
+        String dateStr = simpleDateFormat.format(date);
+
+        return false;
+    }
+
+    @Override
+    public boolean synchronizeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws ParseException {
+        Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
+        Calendar c = Calendar.getInstance();
+        c.setTime(endDate);
+        c.add(Calendar.DATE, 1);
+        endDate = c.getTime();
+        c.clear();
+        boolean status = true;
+        for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
+            log.info("date: {}", cur);
+            status = status && synchronizeOneDayData(oldTableName, newTableName, windColumn, cur);
+            c.setTime(cur);
+            c.add(Calendar.DATE, 1);
+        }
         return status;
     }
 

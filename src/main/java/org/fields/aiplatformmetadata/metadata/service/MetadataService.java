@@ -1,6 +1,7 @@
 package org.fields.aiplatformmetadata.metadata.service;
 
 import org.fields.aiplatformmetadata.metadata.entity.Metadata;
+import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,10 @@ public interface MetadataService {
     String queryDbColumnFromUserColumn(String tableName, String userColumn);
     String queryWindColumnFromUserColumn(String tableName, String userColumn);
     String queryTypeFromUserColumn(String tableName, String userColumn);
+
+    MetadataDetail windColumn2MetadataDetail(String tableName, String windColumn);
+    String windColumn2DbColumn(String tableName, String windColumn);
+    String windColumn2UserColumn(String tableName, String windColumn);
 
     boolean insertTableMetadata(String tableName, String func, String updateTime, String updateUser);
     boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type);

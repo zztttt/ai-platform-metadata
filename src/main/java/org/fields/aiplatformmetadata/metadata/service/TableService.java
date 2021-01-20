@@ -1,8 +1,7 @@
 package org.fields.aiplatformmetadata.metadata.service;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.util.*;
 
 public interface TableService {
     Map<String, String> rootTables = new HashMap<String, String>(){{
@@ -17,4 +16,7 @@ public interface TableService {
     boolean deleteTable(String tableName);
 
     boolean addNewColumn(String tableName, String newWindColumn, String newDbColumn, String newUserColumn, String newColumnType) throws Exception;
+
+    boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date);
+    boolean synchronizeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws ParseException;
 }

@@ -1,5 +1,6 @@
 package org.fields.aiplatformmetadata;
 
+import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.junit.After;
@@ -21,6 +22,7 @@ public class TableServiceTest {
     @Autowired
     TableService tableService;
 
+    // transaction 最小批量 最后一起 commit
     private final String oldTableName = "wind_AShareEODPrices_test";
     private final String newTableName1 = "newTable1";
     private final String functionName = "wsd";
@@ -139,6 +141,9 @@ public class TableServiceTest {
         Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
         Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
         Assert.assertTrue(tableService.createTableBase(oldTableName, columns, types));
+        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
     }
     @Test
     public void createTable1Test() throws Exception{

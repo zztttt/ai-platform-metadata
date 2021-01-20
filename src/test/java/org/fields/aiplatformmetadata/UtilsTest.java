@@ -35,8 +35,13 @@ public class UtilsTest {
         Utils.addNewColumn(tableName, "column3", "varchar(3)");
     }
 
+    @Test
+    public void step4() throws Exception{
+        Utils.getExistingWindCode("wind_ashareeodprices_test", "s_info_windcode", "trade_dt", "20190601");
+    }
+
     @AfterClass
     public static void release() throws Exception{
-        Utils.deleteTable(tableName);
+        //Utils.deleteTable(tableName);
     }
 }
