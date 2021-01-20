@@ -17,6 +17,6 @@ public interface TableService {
 
     boolean addNewColumn(String tableName, String newWindColumn, String newDbColumn, String newUserColumn, String newColumnType) throws Exception;
 
-    boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date);
-    boolean synchronizeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws ParseException;
+    boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) throws Exception;
+    boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws Exception;
 }

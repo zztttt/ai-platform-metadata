@@ -138,12 +138,14 @@ public class TableServiceTest {
             add(list.get(9).get("type"));
             add(list.get(10).get("type"));
         }};
-        Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
-        Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
         Assert.assertTrue(tableService.createTableBase(oldTableName, columns, types));
         Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
         Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
         Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+
+        Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
+        Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
+
     }
     @Test
     public void createTable1Test() throws Exception{

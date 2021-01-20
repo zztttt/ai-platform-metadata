@@ -120,4 +120,42 @@ public class Utils {
         conn.close();
         return windCodes;
     }
+
+    public static String getData(String tableName, String windCode, String windColumn, String dateStr){
+        Connection conn = null;
+        Statement stat = null;
+        try{
+            conn = DriverManager.getConnection(url, username, password);
+            stat = conn.createStatement();
+
+            String sql = "insert into " + tableName + "(";
+            int len = columns.size();
+            for(int i = 0; i < len - 1; ++i){
+                sql = sql + columns.get(i) + ", ";
+            }
+            sql = sql + columns.get(len - 1) + " " + ") value (";
+            for(int i = 0; i < len - 1; ++i){
+                sql = sql + String.valueOf(i) + ", ";
+            }
+            sql = sql + String.valueOf(len) + ")";
+            System.out.println(sql);
+            stat.executeUpdate(sql);
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(stat != null)
+                    stat.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try{
+                if(conn != null)
+                    conn.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return true;
+        }
+    }
 }

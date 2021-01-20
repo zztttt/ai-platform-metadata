@@ -198,16 +198,17 @@ public class TableServiceImpl implements TableService {
     }
 
     @Override
-    public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) {
+    public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) throws Exception{
         String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
         String newDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
         String dateStr = simpleDateFormat.format(date);
+        Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, oldDbColumn, newDbColumn, dateStr);
 
         return false;
     }
 
     @Override
-    public boolean synchronizeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws ParseException {
+    public boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws Exception {
         Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
         Calendar c = Calendar.getInstance();
         c.setTime(endDate);
@@ -216,7 +217,7 @@ public class TableServiceImpl implements TableService {
         c.clear();
         boolean status = true;
         for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
-            log.info("date: {}", cur);
+            log.info("synchronize date: {}", cur);
             status = status && synchronizeOneDayData(oldTableName, newTableName, windColumn, cur);
             c.setTime(cur);
             c.add(Calendar.DATE, 1);
