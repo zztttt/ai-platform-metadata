@@ -44,6 +44,8 @@ public class TableController {
                 createTable.getFunctionName(),
                 createTable.getUpdateTime(),
                 createTable.getUpdateUser(),
+                createTable.getStartStr(),
+                createTable.getEndStr(),
                 createTable.getWindColumns(),
                 createTable.getDbColumns(),
                 createTable.getUserColumns(),

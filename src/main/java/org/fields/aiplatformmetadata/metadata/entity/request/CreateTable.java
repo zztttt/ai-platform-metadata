@@ -11,6 +11,8 @@ public class CreateTable {
     private String functionName;
     private String updateTime;
     private String updateUser;
+    private String startStr;
+    private String endStr;
     private List<String> windColumns;
     private List<String> dbColumns;
     private List<String> userColumns;

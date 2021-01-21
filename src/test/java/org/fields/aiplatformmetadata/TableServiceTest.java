@@ -28,6 +28,8 @@ public class TableServiceTest {
     private final String functionName = "wsd";
     private final String oldUpdateTime = "20190602";
     private final String newUpdateTime = "20190603";
+    private final String startStr = "20180101";
+    private final String endStr = "20180202";
     private final String rootUpdateUser = "root";
     private final String updateUser = "zzt";
 
@@ -173,7 +175,7 @@ public class TableServiceTest {
             add("varchar(12)");
             add("varchar(13)");
         }};
-        Assert.assertTrue(tableService.createTable(oldTableName, newTableName1, functionName, newUpdateTime, updateUser, windColumns, dbColumns, userColumns, types));
+        Assert.assertTrue(tableService.createTable(oldTableName, newTableName1, functionName, newUpdateTime, updateUser, startStr, endStr, windColumns, dbColumns, userColumns, types));
     }
 
     @After
