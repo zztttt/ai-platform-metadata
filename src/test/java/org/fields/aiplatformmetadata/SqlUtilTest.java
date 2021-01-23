@@ -33,8 +33,8 @@ public class SqlUtilTest {
            add("value2");
            add("value3");
         }};
-        String sql = SqlUtils.update(tableName, code, date, attributions, values);
-        System.out.println(sql);
+        //String sql = SqlUtils.update(tableName, code, date, attributions, values);
+        //System.out.println(sql);
     }
 
     @Test

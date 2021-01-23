@@ -36,15 +36,22 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
-    public boolean updateData(String tableName, String windCode, String dateStr, String windColumn, String value) {
+    public boolean updateData(String tableName, String windCode, String dateStr, String dbColumn, String value) {
+        String windCodeColumn = metadataService.getWindCodeForDbColumn(tableName);
+        String dateStrColumn = metadataService.getTradeDtForDbColumn(tableName);
         if(!isLineExisting(tableName, windCode, dateStr)){
-            return Utils.insertData(tableName, windCode, dateStr, windColumn, value);
+            return Utils.insertNewLine(tableName, windCodeColumn, dateStrColumn, windCode, dateStr);
         }
-        return Utils.updateData(tableName, windCode, dateStr, windColumn, value);
+        return Utils.updateData(tableName, windCodeColumn, dateStrColumn, windCode, dateStr, dbColumn, value);
     }
 
     @Override
-    public boolean insertData(String tableName, String windCode, String dateStr, String windColumn, String value) {
-        return Utils.insertData(tableName, windCode, dateStr, windColumn, value);
+    public boolean updateNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr) {
+        return false;
+    }
+
+    @Override
+    public boolean insertData(String tableName, String windCode, String dateStr, String dbColumn, String value) {
+        return Utils.insertData(tableName, windCode, dateStr, dbColumn, value);
     }
 }

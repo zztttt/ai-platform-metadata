@@ -206,7 +206,7 @@ public class TableServiceImpl implements TableService {
     @Override
     public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) throws Exception{
         String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
-        String newDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
+        String newDbColumn = metadataService.windColumn2DbColumn(newTableName, windColumn);
         String dateStr = simpleDateFormat.format(date);
         List<MetadataDetail> metadataDetails = metadataService.queryMetadataDetails(oldTableName);
         String tradeDt = null;
@@ -224,6 +224,10 @@ public class TableServiceImpl implements TableService {
                 // cache 中没有数据，从wind拿
                 if(value == null){
                     value = dataService.getDataFromWind(windCode, dateStr, windColumn);
+                    if(value == null){
+                        log.info("pull date from wind fail.");
+                        throw new ApiException("pull date from wind fail.");
+                    }
                     // 然后将该数据先写入oldTable，再写入newTable
                     status = status && dataService.updateData(oldTableName, windCode, dateStr, oldDbColumn, value);
                 }

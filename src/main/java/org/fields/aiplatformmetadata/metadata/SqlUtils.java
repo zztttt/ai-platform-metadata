@@ -17,7 +17,7 @@ public class SqlUtils {
     }
 
     // update t1 set c1 = c1, c2 = c2, ... where cn = cn and cm = cm
-    public static String update(String tableName, String windCode, String date, List<String> attributions, List<String> values){
+    public static String update(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String date, List<String> attributions, List<String> values){
         assert attributions.size() == values.size();
         String sql = "update " + tableName + " set ";
         String link = "";
@@ -26,10 +26,16 @@ public class SqlUtils {
             sql += link + attributions.get(i) + " = " + values.get(i);
             link = ",";
         }
-        sql += " where s_info_windcode = " + windCode + " and trade_dt = " + date;
+        sql += " where " + windCodeColumn + " = " + windCode + " and " + dateStrColumn + " = " + date;
         return sql;
     }
 
+    public static String insertNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr){
+        String sql = "insert into " + tableName + " ("
+                + windCodeColumn + ", " + dateStrColumn + ") "
+                + "value (" + windCode + ", " + dateStr + ")";
+        return  sql;
+    }
     // insert into t1 (c1, c2...) value (v1, v2...)
     public static String insert(String tableName, String windCode, String date, List<String> attributions, List<String> values){
         assert attributions.size() == values.size();

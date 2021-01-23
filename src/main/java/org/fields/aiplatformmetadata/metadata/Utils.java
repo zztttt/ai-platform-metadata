@@ -25,6 +25,79 @@ public class Utils {
         }
 
     }
+
+    public static boolean isTableExist(String tableName){
+        String sql = "show tables like " +tableName;
+        ResultSet resultSet = executeQuery(sql);
+        boolean isExist = false;
+        try{
+            while(resultSet.next()){
+                isExist = true;
+                break;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            return isExist;
+        }
+    }
+    public static ResultSet executeQuery(String sql){
+        Connection conn = null;
+        Statement stat = null;
+        ResultSet resultSet = null;
+        try{
+            conn = DriverManager.getConnection(url, username, password);
+            stat = conn.createStatement();
+
+            resultSet = stat.executeQuery(sql);
+            return resultSet;
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(stat != null)
+                    stat.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try{
+                if(conn != null)
+                    conn.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return resultSet;
+        }
+    }
+    public static int executeUpdate(String sql){
+        Connection conn = null;
+        Statement stat = null;
+        int ret = 0;
+        ResultSet resultSet = null;
+        try{
+            conn = DriverManager.getConnection(url, username, password);
+            stat = conn.createStatement();
+
+            ret = stat.executeUpdate(sql);
+            return ret;
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            try{
+                if(stat != null)
+                    stat.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try{
+                if(conn != null)
+                    conn.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            return ret;
+        }
+    }
     public static boolean createTable(String tableName, List<String> columns, List<String> columnTypes) throws Exception{
         Connection conn = DriverManager.getConnection(url, username, password);
         Statement stat = conn.createStatement();
@@ -162,21 +235,20 @@ public class Utils {
         }
     }
 
-    public static boolean updateData(String tableName, String windCode, String dateStr, String windColumn, String value){
+    public static boolean updateData(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr, String windColumn, String value){
         Connection conn = null;
         Statement stat = null;
+        int ret = 0;
         try{
             conn = DriverManager.getConnection(url, username, password);
             stat = conn.createStatement();
 
             List<String> attributions = new ArrayList<String>(){{add(windColumn);}};
             List<String> values = new ArrayList<String>(){{add(value);}};
-            String sql = SqlUtils.update(tableName, windCode, dateStr, attributions, values);
+            String sql = SqlUtils.update(tableName, windCodeColumn, dateStrColumn, windCode, dateStr, attributions, values);
 
             log.info("updateData execute sql: {}", sql);
-            int ret = stat.executeUpdate(sql);
-            assert ret <= 1;
-            return ret == 1? true:false;
+            ret = stat.executeUpdate(sql);
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -192,13 +264,21 @@ public class Utils {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            return false;
+            assert ret <= 1;
+            return ret == 1? true:false;
         }
+    }
+
+    public static boolean insertNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr){
+        String sql = SqlUtils.insertNewLine(tableName, windCodeColumn, dateStrColumn, windCode, dateStr);
+        int ret = executeUpdate(sql);
+        return ret == 1;
     }
 
     public static boolean insertData(String tableName, String windCode, String dateStr, String windColumn, String value){
         Connection conn = null;
         Statement stat = null;
+        int ret = 0;
         try{
             conn = DriverManager.getConnection(url, username, password);
             stat = conn.createStatement();
@@ -208,9 +288,7 @@ public class Utils {
 
             String sql = SqlUtils.insert(tableName, windCode, dateStr, attributions, values);
             log.info("insertData execute sql: {}", sql);
-            int ret = stat.executeUpdate(sql);
-            assert ret <= 1;
-            return ret == 1? true:false;
+            ret = stat.executeUpdate(sql);
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -226,24 +304,25 @@ public class Utils {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            return false;
+            assert ret <= 1;
+            return ret == 1? true:false;
         }
     }
 
     public static boolean isLineExisting(String tableName, String windDbColumn, String dateDbColumn, String windCode, String dateStr){
         Connection conn = null;
         Statement stat = null;
+        boolean ret = false;
         try{
             conn = DriverManager.getConnection(url, username, password);
             stat = conn.createStatement();
             String sql = SqlUtils.selectLine(tableName, windDbColumn, dateDbColumn, windCode, dateStr);
             log.info("isLineExisting execute sql: {}", sql);
             ResultSet resultSet = stat.executeQuery(sql);
-            boolean ret = false;
+
             while(resultSet.next()){
                 ret = true;
             }
-            return ret;
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -259,7 +338,7 @@ public class Utils {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            return false;
+            return ret;
         }
     }
 
