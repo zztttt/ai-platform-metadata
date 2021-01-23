@@ -6,6 +6,7 @@ import org.fields.aiplatformmetadata.metadata.SqlUtils;
 import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
+import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,10 +16,14 @@ import java.util.List;
 @Slf4j
 @Service
 public class DataServiceImpl implements DataService {
+    @Autowired
+    MetadataService metadataService;
 
     @Override
     public boolean isLineExisting(String tableName, String windCode, String dateStr) {
-        return Utils.isLineExisting(tableName, windCode, dateStr);
+        String windDbColumn = metadataService.getWindCodeForDbColumn(tableName);
+        String dateDbColumn = metadataService.getTradeDtForDbColumn(tableName);
+        return Utils.isLineExisting(tableName, windDbColumn, dateDbColumn, windCode, dateStr);
     }
 
     @Override

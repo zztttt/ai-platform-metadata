@@ -151,31 +151,31 @@ public class TableServiceTest {
     }
     @Test
     public void createTable1Test() throws Exception{
-        List<String> windColumns = new ArrayList<String>(){{
-            add("windcode");
-            add("lastradeday_s");
-            add("trade_status");
-            add("new_wind_column");
-        }};
-        List<String> dbColumns = new ArrayList<String>(){{
-            add("s_info_windcode_1");
-            add("trade_dt_1");
-            add("s_dq_tradestatus_1");
-            add(null);
-        }};
-        List<String> userColumns = new ArrayList<String>(){{
-            add("wind代码");
-            add("交易日期");
-            add("交易状态");
-            add("new_user_column");
-        }};
-        List<String> types = new ArrayList<String>(){{
-            add("varchar(10)");
-            add("varchar(11)");
-            add("varchar(12)");
-            add("varchar(13)");
-        }};
-        Assert.assertTrue(tableService.createTable(oldTableName, newTableName1, functionName, newUpdateTime, updateUser, startStr, endStr, windColumns, dbColumns, userColumns, types));
+//        List<String> windColumns = new ArrayList<String>(){{
+//            add("windcode");
+//            add("lastradeday_s");
+//            add("trade_status");
+//            add("new_wind_column");
+//        }};
+//        List<String> dbColumns = new ArrayList<String>(){{
+//            add("s_info_windcode_1");
+//            add("trade_dt_1");
+//            add("s_dq_tradestatus_1");
+//            add(null);
+//        }};
+//        List<String> userColumns = new ArrayList<String>(){{
+//            add("wind代码");
+//            add("交易日期");
+//            add("交易状态");
+//            add("new_user_column");
+//        }};
+//        List<String> types = new ArrayList<String>(){{
+//            add("varchar(10)");
+//            add("varchar(11)");
+//            add("varchar(12)");
+//            add("varchar(13)");
+//        }};
+//        Assert.assertTrue(tableService.createTable(oldTableName, newTableName1, functionName, newUpdateTime, updateUser, startStr, endStr, windColumns, dbColumns, userColumns, types));
     }
 
     @After

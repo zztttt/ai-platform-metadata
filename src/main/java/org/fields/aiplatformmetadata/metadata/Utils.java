@@ -1,6 +1,8 @@
 package org.fields.aiplatformmetadata.metadata;
 
 import lombok.extern.slf4j.Slf4j;
+import org.fields.aiplatformmetadata.metadata.service.MetadataService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,6 +12,8 @@ import java.util.Set;
 
 @Slf4j
 public class Utils {
+    @Autowired
+    MetadataService metadataService;
     private static String url = "jdbc:mysql://rm-uf67ktcrjo69g32viko.mysql.rds.aliyuncs.com:3306/wind?useSSL=false&characterEncoding=utf-8&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true";
     private static String username = "zzt";
     private static String password = "Zzt19980924x";
@@ -97,11 +101,11 @@ public class Utils {
         return true;
     }
 
-    public static Set<String> getExistingWindCode(String tableName, String codeDbColumn, String dateDbColumn, String dateStr) throws Exception{
+    public static Set<String> getExistingWindCode(String tableName, String dateDbColumn, String dateStr) throws Exception{
         Connection conn = DriverManager.getConnection(url, username, password);
         Statement stat = conn.createStatement();
 
-        String sql = "select " + codeDbColumn + " from " + tableName + " where " + dateDbColumn + " = " + dateStr;
+        String sql = "select s_info_windcode from " + tableName + " where " + dateDbColumn + " = " + dateStr;
         //String sql = "select * from metadata";
         System.out.println(sql);
 
@@ -125,21 +129,20 @@ public class Utils {
         return windCodes;
     }
 
-    public static String getData(String tableName, String windCode, String dateStr, String windColumn){
+    public static String getData(String tableName, String windCode, String dateStr, String dbColumn){
         Connection conn = null;
         Statement stat = null;
+        String ret = null;
         try{
             conn = DriverManager.getConnection(url, username, password);
             stat = conn.createStatement();
 
-            String sql = SqlUtils.selectData(tableName, windCode, dateStr, windColumn);
+            String sql = SqlUtils.selectData(tableName, windCode, dateStr, dbColumn);
             log.info("getData execute sql: {}", sql);
             ResultSet resultSet = stat.executeQuery(sql);
-            String ret = null;
             while(resultSet.next()){
                 ret = (String) resultSet.getObject(1);
             }
-            return ret;
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -155,7 +158,7 @@ public class Utils {
             }catch (Exception e){
                 e.printStackTrace();
             }
-            return null;
+            return ret;
         }
     }
 
@@ -227,14 +230,13 @@ public class Utils {
         }
     }
 
-    public static boolean isLineExisting(String tableName, String windCode, String dateStr){
+    public static boolean isLineExisting(String tableName, String windDbColumn, String dateDbColumn, String windCode, String dateStr){
         Connection conn = null;
         Statement stat = null;
         try{
             conn = DriverManager.getConnection(url, username, password);
             stat = conn.createStatement();
-
-            String sql = SqlUtils.selectLine(tableName, windCode, dateStr);
+            String sql = SqlUtils.selectLine(tableName, windDbColumn, dateDbColumn, windCode, dateStr);
             log.info("isLineExisting execute sql: {}", sql);
             ResultSet resultSet = stat.executeQuery(sql);
             boolean ret = false;

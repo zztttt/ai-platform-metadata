@@ -48,9 +48,9 @@ public class SqlUtils {
         sql += ")";
         return sql;
     }
-    // select * from table1 where s_info_windcode = windcode and trade_dt = 20190601
-    public static String selectLine(String tableName, String windcode, String dateStr){
-        String sql = "select * from " + tableName + " where s_info_windcode = " + windcode + " and trade_dt = " + dateStr;
+    // select * from table1 where d1(s_info_windcode) = windcode and d2(trade_dt) = 20190601
+    public static String selectLine(String tableName, String windDbColumn, String dateDbColumn, String windcode, String dateStr){
+        String sql = "select * from " + tableName + " where " + windDbColumn + " = " +  windcode + " and " + dateDbColumn + " = " + dateStr;
         return sql;
     }
 

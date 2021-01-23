@@ -55,7 +55,7 @@ public class SqlUtilTest {
 
     @Test
     public void selectLineTest(){
-        String sql = SqlUtils.selectLine(tableName, "windcode", "20190601");
-        System.out.println(sql);
+        //String sql = SqlUtils.selectLine(tableName, "windcode", "20190601");
+        //System.out.println(sql);
     }
 }

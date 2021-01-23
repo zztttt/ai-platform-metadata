@@ -3,6 +3,7 @@ package org.fields.aiplatformmetadata.metadata.service.Impl;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.Utils;
+import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
@@ -207,19 +208,32 @@ public class TableServiceImpl implements TableService {
         String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
         String newDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
         String dateStr = simpleDateFormat.format(date);
-        Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, oldDbColumn, newDbColumn, dateStr);
-        boolean status = true;
-        for(String windCode: existingWindCodes){
-            String value = Utils.getData(oldTableName, windCode, dateStr, windColumn);
-            // cache 中没有数据，从wind拿
-            if(value == null){
-                value = dataService.getDataFromWind(windCode, dateStr, windColumn);
-                // 然后将该数据先写入oldTable，再写入newTable
-                status = status && dataService.updateData(oldTableName, windCode, dateStr, windColumn, value);
+        List<MetadataDetail> metadataDetails = metadataService.queryMetadataDetails(oldTableName);
+        String tradeDt = null;
+        for(MetadataDetail metadataDetail: metadataDetails){
+            //日行情表
+            if(metadataDetail.getDbColumn().equals("trade_dt")){
+                tradeDt = metadataDetail.getDbColumn();
             }
-            status = status && dataService.updateData(newTableName, windCode, dateStr, windColumn, value);
         }
-        return status;
+        if(tradeDt != null){
+            boolean status = true;
+            Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, tradeDt, dateStr);
+            for(String windCode: existingWindCodes){
+                String value = Utils.getData(oldTableName, windCode, dateStr, oldDbColumn);
+                // cache 中没有数据，从wind拿
+                if(value == null){
+                    value = dataService.getDataFromWind(windCode, dateStr, windColumn);
+                    // 然后将该数据先写入oldTable，再写入newTable
+                    status = status && dataService.updateData(oldTableName, windCode, dateStr, oldDbColumn, value);
+                }
+                status = status && dataService.updateData(newTableName, windCode, dateStr, newDbColumn, value);
+            }
+            return status;
+        }else{
+            // TODO
+            return false;
+        }
     }
 
     @Override
@@ -244,7 +258,8 @@ public class TableServiceImpl implements TableService {
     public boolean synchronizeAllData(String oldTableName, String newTableName, List<String> windColumns, String startStr, String endStr) throws Exception{
         boolean status = true;
         for(String windColumn: windColumns){
-            status = status && synchronizeTimeRangeData(oldTableName, newTableName, windColumn, startStr, endStr);
+            if(!windColumn.equals("windcode"))
+                status = status && synchronizeTimeRangeData(oldTableName, newTableName, windColumn, startStr, endStr);
         }
         return status;
     }

@@ -57,6 +57,30 @@ public class MetadataServiceImpl implements MetadataService {
         return metadata;
     }
 
+    @Override
+    public List<MetadataDetail> queryMetadataDetails(String tableName) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName);
+        List<MetadataDetail> metadataDetails = metadataDetailMapper.selectList(queryWrapper);
+        return metadataDetails;
+    }
+
+    @Override
+    public String getWindCodeForDbColumn(String tableName) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("windColumn", "windcode");
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        return metadataDetail.getDbColumn();
+    }
+
+    @Override
+    public String getTradeDtForDbColumn(String tableName) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("windColumn", "lastradeday_s");
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        return metadataDetail.getDbColumn();
+    }
+
     /**
      * @param tableName 数据库表名
      * @param windColumn 指定的wind field

@@ -11,6 +11,9 @@ public interface MetadataService {
     boolean isTaskExisting(String tableName);
 
     Metadata queryMetadata(String tableName);
+    List<MetadataDetail> queryMetadataDetails(String tableName);
+    String getWindCodeForDbColumn(String tableName);
+    String getTradeDtForDbColumn(String tableName);
     boolean isColumnExist(String tableName, String windColumn);
     String queryDbColumnFromUserColumn(String tableName, String userColumn);
     String queryWindColumnFromUserColumn(String tableName, String userColumn);
