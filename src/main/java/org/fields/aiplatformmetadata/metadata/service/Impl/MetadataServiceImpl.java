@@ -81,6 +81,14 @@ public class MetadataServiceImpl implements MetadataService {
         return metadataDetail.getDbColumn();
     }
 
+    @Override
+    public String dbColumn2WindColumn(String tableName, String dbColumn) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("dbColumn", dbColumn);
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        return metadataDetail.getWindColumn();
+    }
+
     /**
      * @param tableName 数据库表名
      * @param windColumn 指定的wind field

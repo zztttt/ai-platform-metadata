@@ -27,6 +27,19 @@ public class DataServiceImpl implements DataService {
     }
 
     @Override
+    public boolean isLineExisting(String tableName, String windCode) {
+        String windDbColumn = metadataService.getWindCodeForDbColumn(tableName);
+        return Utils.isLineExisting(tableName, windDbColumn, windCode);
+    }
+
+    /**
+     * 行情表wsd
+     * @param windCode
+     * @param dateStr
+     * @param windColumn
+     * @return
+     */
+    @Override
     public String getDataFromWind(String windCode, String dateStr, String windColumn) {
         String[] args = new String[3];
         args[0] = windCode;
@@ -35,20 +48,44 @@ public class DataServiceImpl implements DataService {
         return Utils.callScript(args);
     }
 
+    /**
+     * 行情表
+     * @param tableName
+     * @param windCode
+     * @param dateStr
+     * @param dbColumn
+     * @param value
+     * @return
+     */
     @Override
     public boolean updateData(String tableName, String windCode, String dateStr, String dbColumn, String value) {
         String windCodeColumn = metadataService.getWindCodeForDbColumn(tableName);
         String dateStrColumn = metadataService.getTradeDtForDbColumn(tableName);
+        String dateWindColumn = metadataService.dbColumn2WindColumn(tableName, dbColumn);
         if(!isLineExisting(tableName, windCode, dateStr)){
+            //log.info("=============================insert new line. dateStrColumn: {}", dateStrColumn);
             return Utils.insertNewLine(tableName, windCodeColumn, dateStrColumn, windCode, dateStr);
         }
         return Utils.updateData(tableName, windCodeColumn, dateStrColumn, windCode, dateStr, dbColumn, value);
     }
 
+    /**
+     * dataset
+     * @param tableName
+     * @param windCode
+     * @param dbColumn
+     * @param value
+     * @return
+     */
     @Override
-    public boolean updateNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr) {
-        return false;
+    public boolean updateData(String tableName, String windCode, String dbColumn, String value) {
+        String windCodeColumn = metadataService.getWindCodeForDbColumn(tableName);
+        if(!isLineExisting(tableName, windCode)){
+            return Utils.insertNewLine(tableName, windCodeColumn, windCode);
+        }
+        return Utils.updateData(tableName, windCodeColumn, windCode, dbColumn, value);
     }
+
 
     @Override
     public boolean insertData(String tableName, String windCode, String dateStr, String dbColumn, String value) {

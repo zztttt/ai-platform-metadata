@@ -27,21 +27,37 @@ public class TableServiceImpl implements TableService {
 
     private List<Map<String, String>> list1 = new ArrayList<Map<String, String>>(){{
         add(new HashMap<String, String>(){{
-            put("tableName", "wind_AShareEODPrices");
+            put("tableName", "wind_AShareEODPrices_test");
             put("windColumn", "windcode");
             put("dbColumn", "s_info_windcode");
             put("userColumn", "wind代码");
-            put("type", "varchar(10)");
+            put("type", "varchar(40)");
         }});
     }};
     private List<Map<String, String>> list2 = new ArrayList<Map<String, String>>(){{
         add(new HashMap<String, String>(){{
-            put("tableName", "wind_CCommidityFuturesEODPrices");
+            put("tableName", "wind_CCommidityFuturesEODPrices_test");
             put("windColumn", "windcode");
             put("dbColumn", "s_info_windcode");
             put("userColumn", "wind代码");
-            put("type", "varchar(10)");
+            put("type", "varchar(40)");
         }});
+    }};
+    private List<Map<String, String>> list3 = new ArrayList<Map<String, String>>(){{
+        add(new HashMap<String, String>(){{
+            put("tableName", "wind_AShareDescription_test");
+            put("windColumn", "windcode");
+            put("dbColumn", "s_info_windcode");
+            put("userColumn", "wind代码");
+            put("type", "varchar(40)");
+        }});
+    }};
+
+    private List<String> windCodes = new ArrayList<String>(){{
+        add("000001.SZ");
+        add("000002.SZ");
+        add("000004.SZ");
+        add("000005.SZ");
     }};
 
     /**
@@ -68,12 +84,25 @@ public class TableServiceImpl implements TableService {
             log.info("{} is not existing, create it", "行情期货");
             status = status && metadataService.insertTableMetadata(rootTables.get("行情期货"), "wsd", "20190601", "zzt2");
             status = status && metadataService.insertTableMetadataDetail(list2);
-            status = status && createTableBase(rootTables.get("行情期货"),
+            status = status && createTableBase(
+                    rootTables.get("行情期货"),
                     new ArrayList<String>() {{
                         add(list2.get(0).get("dbColumn"));
                     }},
                     new ArrayList<String>() {{
                         add(list2.get(0).get("type"));
+                    }});
+        }
+        if(metadataService.isTableExisting(rootTables.get("A股基本资料")) == false) {
+            log.info("{} is not existing, create it", "A股基本资料");
+            status = status && metadataService.insertTableMetadata(rootTables.get("A股基本资料"), "wsd", "20190601", "zzt3");
+            status = status && metadataService.insertTableMetadataDetail(list3);
+            status = status && createTableBase(rootTables.get("A股基本资料"),
+                    new ArrayList<String>() {{
+                        add(list3.get(0).get("dbColumn"));
+                    }},
+                    new ArrayList<String>() {{
+                        add(list3.get(0).get("type"));
                     }});
         }
         return status;
@@ -161,7 +190,19 @@ public class TableServiceImpl implements TableService {
         boolean ret = Utils.createTable(newTableName, dbColumns, types);
         ret = ret && metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
         ret = ret && metadataService.insertTableMetadataDetail(metadataDetails);
-        ret = ret && synchronizeAllData(oldTableName, newTableName, windColumns, startStr, endStr);
+        if(oldTableName.equals("wind_AShareEODPrices_test") || oldTableName.equals("wind_CCommodityFuturesEODPrices"))
+            ret = ret && synchronizeAllData(oldTableName, newTableName, windColumns, startStr, endStr);
+        else if(oldTableName.equals("wind_AShareDescription")) {
+            ret = ret && synchronizeDataset(oldTableName, newTableName, windCodes, windColumns, startStr, endStr);
+        }
+        else if(oldTableName.equals("wind_AShareFinancialIndex")){
+            assert false;
+        }else if(oldTableName.equals("wind_GlobalMacrography_test")){
+            assert false;
+        }else{
+            log.info("invalid oldTable name: {}", oldTableName);
+            return false;
+        }
 
         return ret;
     }
@@ -204,34 +245,41 @@ public class TableServiceImpl implements TableService {
     }
 
     @Override
-    public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date) throws Exception{
+    public boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date, List<String> existingWindCodes) throws Exception{
         String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
         String newDbColumn = metadataService.windColumn2DbColumn(newTableName, windColumn);
         String dateStr = simpleDateFormat.format(date);
         List<MetadataDetail> metadataDetails = metadataService.queryMetadataDetails(oldTableName);
-        String tradeDt = null;
-        for(MetadataDetail metadataDetail: metadataDetails){
-            //日行情表
-            if(metadataDetail.getDbColumn().equals("trade_dt")){
-                tradeDt = metadataDetail.getDbColumn();
-            }
-        }
-        if(tradeDt != null){
-            boolean status = true;
-            Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, tradeDt, dateStr);
+//        String tradeDt = null;
+//        for(MetadataDetail metadataDetail: metadataDetails){
+//            //日行情表
+//            if(metadataDetail.getDbColumn().equals("trade_dt")){
+//                tradeDt = metadataDetail.getDbColumn();
+//            }
+//        }
+        if(oldTableName.equals("wind_AShareEODPrices_test") || oldTableName.equals("wind_CCommidityFuturesEODPrices_test")){
+            //String dateDbColumn = metadataService.getTradeDtForDbColumn(oldTableName);
+            boolean status = true, flag = false;
+            //Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, dateDbColumn, dateStr);
             for(String windCode: existingWindCodes){
                 String value = Utils.getData(oldTableName, windCode, dateStr, oldDbColumn);
                 // cache 中没有数据，从wind拿
                 if(value == null){
                     value = dataService.getDataFromWind(windCode, dateStr, windColumn);
+                    // wind 中没有
                     if(value == null){
-                        log.info("pull date from wind fail.");
-                        throw new ApiException("pull date from wind fail.");
+                        log.info("pull date from wind fail. there is no data in this day");
+                        //throw new ApiException("pull date from wind fail.");
+                    }else{
+                        // wind 中有数据将该数据先写入oldTable，再写入newTable
+                        status = status && dataService.updateData(oldTableName, windCode, dateStr, oldDbColumn, value);
                     }
-                    // 然后将该数据先写入oldTable，再写入newTable
-                    status = status && dataService.updateData(oldTableName, windCode, dateStr, oldDbColumn, value);
+                    // 然后
+
                 }
+                // 更新newTable
                 status = status && dataService.updateData(newTableName, windCode, dateStr, newDbColumn, value);
+
             }
             return status;
         }else{
@@ -248,16 +296,29 @@ public class TableServiceImpl implements TableService {
         c.add(Calendar.DATE, 1);
         endDate = c.getTime();
         c.clear();
+
+        String dateDbColumn = metadataService.getTradeDtForDbColumn(oldTableName);
+        List<String> existingWindCodes = Utils.getExistingWindCodes(oldTableName, dateDbColumn, startStr, endStr);
         boolean status = true;
         for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
             log.info("synchronize date: {}", cur);
-            status = status && synchronizeOneDayData(oldTableName, newTableName, windColumn, cur);
+            status = status && synchronizeOneDayData(oldTableName, newTableName, windColumn, cur, existingWindCodes);
             c.setTime(cur);
-            c.add(Calendar.DATE, 1);
+            c.add(  Calendar.DATE, 1);
         }
         return status;
     }
 
+    /**
+     * 用于行情表的数据同步
+     * @param oldTableName 旧表名
+     * @param newTableName 用户新建的数据表的名字
+     * @param windColumns 用户想要的wind列
+     * @param startStr 起始时间
+     * @param endStr 终止时间
+     * @return Boolean
+     * @throws Exception ？
+     */
     @Override
     public boolean synchronizeAllData(String oldTableName, String newTableName, List<String> windColumns, String startStr, String endStr) throws Exception{
         boolean status = true;
@@ -268,4 +329,34 @@ public class TableServiceImpl implements TableService {
         return status;
     }
 
+    /**
+     * 用户数据集的同步
+     * @param oldTableName 旧表名
+     * @param newTableName 用户新建的数据表的名字
+     * @param windColumns 用户想要的wind列
+     * @return Boolean
+     * @throws Exception ？
+     */
+    @Override
+    public boolean synchronizeDataset(String oldTableName, String newTableName, List<String> windCodes, List<String> windColumns, String startStr, String endStr) throws Exception {
+        boolean status = true;
+        for(String windCode: windCodes){
+            for(String windColumn: windColumns){
+                if(!windColumn.equals("windcode")){
+                    String oldDbColumn = metadataService.windColumn2DbColumn(oldTableName, windColumn);
+                    String newDbColumn = metadataService.windColumn2DbColumn(newTableName, windColumn);
+                    String value = Utils.getData(oldTableName, windCode, oldDbColumn);
+                    // 存在该行，但对应列的值为NULL
+                    if(value == null){
+                        // 和日行情表用同一个
+                        value = dataService.getDataFromWind(windCode, endStr, windColumn);
+                        // 先更新旧表的数据。如果没有该行则新加一行
+                        status = status && dataService.updateData(oldTableName, windCode, oldDbColumn, value);
+                    }
+                    status = status && dataService.updateData(newTableName, windCode, newDbColumn, value);
+                }
+            }
+        }
+        return false;
+    }
 }

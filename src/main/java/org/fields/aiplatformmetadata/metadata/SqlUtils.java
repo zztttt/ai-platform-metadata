@@ -30,6 +30,22 @@ public class SqlUtils {
         return sql;
     }
 
+    /**
+     * dateset
+     * @param tableName
+     * @param windCodeColumn
+     * @param windCode
+     * @param windDbColumn
+     * @param value
+     * @return
+     */
+    public static String update(String tableName, String windCodeColumn, String windCode, String windDbColumn, String value){
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ").append(tableName).append(" set ").append(windDbColumn).append(" = ").append(value)
+                .append(" where ").append(windCodeColumn).append(" = '").append(windCode).append("'");
+        return sb.toString();
+    }
+
     // 行情A股
     public static String insertNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr){
         String sql = "insert into " + tableName + " ("
@@ -37,6 +53,20 @@ public class SqlUtils {
                 + "value ('" + windCode + "', " + dateStr + ")";
         return  sql;
     }
+
+    /**
+     * dataset
+     * @param tableName
+     * @param windCodeColumn
+     * @param windCode
+     * @return
+     */
+    public static String insertNewLine(String tableName, String windCodeColumn, String windCode){
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ").append(tableName).append(" (").append(windCodeColumn).append(")").append(" value ( '").append(windCode).append("')");
+        return sb.toString();
+    }
+
     // insert into t1 (c1, c2...) value (v1, v2...)
     public static String insert(String tableName, String windCode, String date, List<String> attributions, List<String> values){
         assert attributions.size() == values.size();
@@ -61,10 +91,29 @@ public class SqlUtils {
         return sql;
     }
 
+    // select * from table1 where d1(s_info_code) = '000001.SZ'
+    public static String selectLine(String tableName, String windDbColumn, String windCode){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(tableName).append(" where ").append(windDbColumn).append(" = '").append(windCode).append("'");
+        return sb.toString();
+    }
+
     // select WINDCOLUMN from table1 where s_info_windcode = windcode and trade_dt = 20190601
     public static String selectData(String tableName, String windcode, String dateStr, String windColumn){
         String sql = "select " + windColumn + " from " + tableName +
                 " where s_info_windcode = '" + windcode + "' and trade_dt = " + dateStr;
         return sql;
+    }
+
+    public static String selectData(String tableName, String windCode, String dbColumn){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select ").append(dbColumn).append(" from ").append(tableName).append(" where s_info_windcode = '").append(windCode).append("'");
+        return sb.toString();
+    }
+
+    public static String selectWindCode(String tableName, String dateDbColumn, String dateStr) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("select s_info_windcode from ").append(tableName).append(" where ").append(dateDbColumn).append(" = ").append(dateStr);
+        return sb.toString();
     }
 }
