@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.metadata.entity.RequestDemo;
 import org.fields.aiplatformmetadata.metadata.entity.request.CreateTable;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
+import org.fields.aiplatformmetadata.metadata.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +19,8 @@ import java.util.List;
 public class TableController {
     @Autowired
     TableService tableService;
+    @Autowired
+    TaskService taskService;
 
     @GetMapping("test")
     public String test(){
@@ -50,6 +53,7 @@ public class TableController {
                 createTable.getDbColumns(),
                 createTable.getUserColumns(),
                 createTable.getTypes());
+        status = status && taskService.insertNewTask(createTable.getUpdateUser(), createTable.getNewTableName(), "无");
         ret.put("code", status?200:404);
         return ret;
     }

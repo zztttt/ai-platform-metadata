@@ -12,7 +12,7 @@ public class SqlUtils {
             sql += link + attibution;
             link = ", ";
         }
-        sql += " from " + tableName + " where s_info_windcode = " + code + " and trade_dt = " + date;
+        sql += " from " + tableName + " where s_info_windcode = '" + code + "' and trade_dt = " + date;
         return sql;
     }
 
@@ -26,14 +26,15 @@ public class SqlUtils {
             sql += link + attributions.get(i) + " = " + values.get(i);
             link = ",";
         }
-        sql += " where " + windCodeColumn + " = " + windCode + " and " + dateStrColumn + " = " + date;
+        sql += " where " + windCodeColumn + " = '" + windCode + "' and " + dateStrColumn + " = " + date;
         return sql;
     }
 
+    // 行情A股
     public static String insertNewLine(String tableName, String windCodeColumn, String dateStrColumn, String windCode, String dateStr){
         String sql = "insert into " + tableName + " ("
                 + windCodeColumn + ", " + dateStrColumn + ") "
-                + "value (" + windCode + ", " + dateStr + ")";
+                + "value ('" + windCode + "', " + dateStr + ")";
         return  sql;
     }
     // insert into t1 (c1, c2...) value (v1, v2...)
@@ -54,16 +55,16 @@ public class SqlUtils {
         sql += ")";
         return sql;
     }
-    // select * from table1 where d1(s_info_windcode) = windcode and d2(trade_dt) = 20190601
+    // select * from table1 where d1(s_info_windcode) = 'windcode' and d2(trade_dt) = 20190601
     public static String selectLine(String tableName, String windDbColumn, String dateDbColumn, String windcode, String dateStr){
-        String sql = "select * from " + tableName + " where " + windDbColumn + " = " +  windcode + " and " + dateDbColumn + " = " + dateStr;
+        String sql = "select * from " + tableName + " where " + windDbColumn + " = '" +  windcode + "' and " + dateDbColumn + " = " + dateStr;
         return sql;
     }
 
     // select WINDCOLUMN from table1 where s_info_windcode = windcode and trade_dt = 20190601
     public static String selectData(String tableName, String windcode, String dateStr, String windColumn){
         String sql = "select " + windColumn + " from " + tableName +
-                " where s_info_windcode = " + windcode + " and trade_dt = " + dateStr;
+                " where s_info_windcode = '" + windcode + "' and trade_dt = " + dateStr;
         return sql;
     }
 }

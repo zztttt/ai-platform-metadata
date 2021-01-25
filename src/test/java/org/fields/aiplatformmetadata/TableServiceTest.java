@@ -88,7 +88,7 @@ public class TableServiceTest {
             add(new HashMap<String, String>(){{
                 put("tableName", oldTableName);
                 put("windColumn", "pct_chg");
-                put("dbColumn", "s_dq_pctchange");
+                put("dbColumn", "s_sq_pctchange");
                 put("userColumn", "涨跌幅(%)");
                 put("type", "varchar(10)");
             }});
@@ -141,9 +141,9 @@ public class TableServiceTest {
             add(list.get(10).get("type"));
         }};
         Assert.assertTrue(tableService.createTableBase(oldTableName, columns, types));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+//        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+//        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+//        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
 
         Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
         Assert.assertTrue(metadataService.insertTableMetadataDetail(list));
