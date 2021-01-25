@@ -289,7 +289,7 @@ public class TableServiceImpl implements TableService {
     }
 
     @Override
-    public boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws Exception {
+    public boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr, List<String> existingWindCodes) throws Exception {
         Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
         Calendar c = Calendar.getInstance();
         c.setTime(endDate);
@@ -297,8 +297,6 @@ public class TableServiceImpl implements TableService {
         endDate = c.getTime();
         c.clear();
 
-        String dateDbColumn = metadataService.getTradeDtForDbColumn(oldTableName);
-        List<String> existingWindCodes = Utils.getExistingWindCodes(oldTableName, dateDbColumn, startStr, endStr);
         boolean status = true;
         for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
             log.info("synchronize date: {}", cur);
@@ -322,9 +320,11 @@ public class TableServiceImpl implements TableService {
     @Override
     public boolean synchronizeAllData(String oldTableName, String newTableName, List<String> windColumns, String startStr, String endStr) throws Exception{
         boolean status = true;
+        String dateDbColumn = metadataService.getTradeDtForDbColumn(oldTableName);
+        List<String> existingWindCodes = Utils.getExistingWindCodes(oldTableName, dateDbColumn, startStr, endStr);
         for(String windColumn: windColumns){
             if(!windColumn.equals("windcode"))
-                status = status && synchronizeTimeRangeData(oldTableName, newTableName, windColumn, startStr, endStr);
+                status = status && synchronizeTimeRangeData(oldTableName, newTableName, windColumn, startStr, endStr, existingWindCodes);
         }
         return status;
     }

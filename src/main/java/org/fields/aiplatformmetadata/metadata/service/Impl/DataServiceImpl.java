@@ -64,7 +64,15 @@ public class DataServiceImpl implements DataService {
         String dateWindColumn = metadataService.dbColumn2WindColumn(tableName, dbColumn);
         if(!isLineExisting(tableName, windCode, dateStr)){
             //log.info("=============================insert new line. dateStrColumn: {}", dateStrColumn);
-            return Utils.insertNewLine(tableName, windCodeColumn, dateStrColumn, windCode, dateStr);
+            if(!dateWindColumn.equals("lastradeday_s") && value != null){
+                boolean status = Utils.insertNewLine(tableName, windCodeColumn, dateStrColumn, windCode, dateStr);
+                status = status && Utils.updateData(tableName, windCodeColumn, dateStrColumn, windCode, dateStr, dbColumn, value);
+                return status;
+            }else{
+                log.info("=============================");
+                return true;
+            }
+
         }
         return Utils.updateData(tableName, windCodeColumn, dateStrColumn, windCode, dateStr, dbColumn, value);
     }

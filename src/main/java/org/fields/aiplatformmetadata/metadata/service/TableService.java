@@ -20,7 +20,7 @@ public interface TableService {
 
     // 行情表
     boolean synchronizeOneDayData(String oldTableName, String newTableName, String windColumn, Date date, List<String> existingWindCodes) throws Exception;
-    boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr) throws Exception;
+    boolean synchronizeTimeRangeData(String oldTableName, String newTableName, String windColumn, String startStr, String endStr, List<String> existingWindCodes) throws Exception;
     boolean synchronizeAllData(String oldTableName, String newTableName, List<String> windColumns, String startStr, String endStr) throws Exception;
 
     // 数据集

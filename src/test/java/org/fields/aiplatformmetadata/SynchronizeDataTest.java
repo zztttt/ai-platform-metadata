@@ -28,6 +28,6 @@ public class SynchronizeDataTest {
 
     @Test
     public void test()throws Exception{
-        tableService.synchronizeTimeRangeData(oldTableName, newTableName, "", startStr, endStr);
+        //tableService.synchronizeTimeRangeData(oldTableName, newTableName, "", startStr, endStr);
     }
 }
