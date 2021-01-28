@@ -3,7 +3,7 @@ package org.fields.aiplatformmetadata.metadata.service.Impl;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.FailUtils;
-import org.fields.aiplatformmetadata.metadata.Utils;
+import org.fields.aiplatformmetadata.metadata.UtilsTmp;
 import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
@@ -23,7 +23,7 @@ public class TableServiceImpl implements TableService {
     @Autowired
     DataService dataService;
     @Autowired
-    Utils utils;
+    UtilsTmp utilsTmp;
 
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -92,7 +92,7 @@ public class TableServiceImpl implements TableService {
                 put("type", type);
             }});
         }
-        boolean ret = utils.createTable(newTableName, dbColumns, types);
+        boolean ret = utilsTmp.createTable(newTableName, dbColumns, types);
         ret = ret && metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
         ret = ret && metadataService.insertTableMetadataDetail(metadataDetails);
         ret = ret && synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);

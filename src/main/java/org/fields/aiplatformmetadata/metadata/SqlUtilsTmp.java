@@ -11,7 +11,7 @@ import java.util.Locale;
 
 @Slf4j
 @Component
-public class SqlUtils {
+public class SqlUtilsTmp {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
