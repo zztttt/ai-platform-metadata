@@ -2,6 +2,7 @@ package org.fields.aiplatformmetadata.metadata.service.Impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.exception.ApiException;
+import org.fields.aiplatformmetadata.metadata.FailUtils;
 import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -22,6 +22,8 @@ public class TableServiceImpl implements TableService {
     MetadataService metadataService;
     @Autowired
     DataService dataService;
+    @Autowired
+    Utils utils;
 
     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
@@ -45,56 +47,6 @@ public class TableServiceImpl implements TableService {
     }};
 
     /**
-     * 初始化十三个历史数据库表，在最开始调用一次即可
-     * @return boolean
-     */
-    @Override
-    public boolean checkAndInitRootTables() {
-        boolean status = true;
-        if(metadataService.isTableExisting(rootTables.get("行情_A股")) == false) {
-            log.info("{} is not existing, create it.", "行情_A股");
-            status = status && metadataService.insertTableMetadata(rootTables.get("行情_A股"), "wsd", "20190601", "zzt1");
-            status = status && metadataService.insertTableMetadataDetail(list1);
-            status = status && createTableBase(rootTables.get("行情_A股"),
-                    new ArrayList<String>() {{
-                        add(list1.get(0).get("dbColumn"));
-                    }},
-                    new ArrayList<String>() {{
-                        add(list1.get(0).get("type"));
-                    }});
-        }
-
-        if(metadataService.isTableExisting(rootTables.get("行情期货")) == false) {
-            log.info("{} is not existing, create it", "行情期货");
-            status = status && metadataService.insertTableMetadata(rootTables.get("行情期货"), "wsd", "20190601", "zzt2");
-            status = status && metadataService.insertTableMetadataDetail(list2);
-            status = status && createTableBase(rootTables.get("行情期货"),
-                    new ArrayList<String>() {{
-                        add(list2.get(0).get("dbColumn"));
-                    }},
-                    new ArrayList<String>() {{
-                        add(list2.get(0).get("type"));
-                    }});
-        }
-        return status;
-    }
-
-    /**
-     * 删除所有数据库表格，用于单元测试，一般情况下不要用它
-     * @return boolean
-     */
-    @Override
-    public boolean deleteRootTables() {
-        boolean status = metadataService.deleteTableMetadata(rootTables.get("行情_A股"));
-        status = status && metadataService.deleteTableMetadataDetail(rootTables.get("行情_A股"));
-        status = status && deleteTable(rootTables.get("行情_A股"));
-        status = status && metadataService.deleteTableMetadata(rootTables.get("行情期货"));
-        status = status && metadataService.deleteTableMetadataDetail(rootTables.get("行情期货"));
-        status = status && deleteTable(rootTables.get("行情期货"));
-        return status;
-    }
-
-    /**
      * @param tableName 数据库表名字
      * @param columns 数据库表每列的名字
      * @param columnTypes 数据库表每列的类型
@@ -104,27 +56,119 @@ public class TableServiceImpl implements TableService {
     public boolean createTableBase(String tableName, List<String> columns, List<String> columnTypes) {
         log.info("createTableBase: {}, {} columns", tableName, columns.size());
         try{
-            return Utils.createTable(tableName, columns, columnTypes);
+            return FailUtils.createTable(tableName, columns, columnTypes);
         }catch (Exception e){
             log.info("createTableBase: {}, {} columns error", tableName, columns.size());
             e.printStackTrace();
             return false;
         }
     }
-
-    /**
-     * @param oldTableName 这个必须是已经存在的表，用户只允许从最大的表选择指定的列来创建新表
-     * @param newTableName 这个是用户创建的表的名字，如果已经存在则上抛exception
-     * @param functionName 这个表所使用的wind函数类型
-     * @param updateTime 最后一次更新该表的时间
-     * @param updateUser 最后一次更新该表的用户
-     * @param windColumns wind里对应的field
-     * @param dbColumns 在数据库中存储该列的列名,可以为null
-     * @param userColumns 用户看到的该列的列名，默认情况下和dbColumns相同，可以自定义
-     * @return boolean
-     */
     @Override
-    public boolean createTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, String startStr, String endStr, List<String> windColumns, List<String> dbColumns, List<String> userColumns, List<String> types) throws Exception{
+    public Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> dbColumns, List<String> userColumns) {
+        if(!metadataService.isTableExisting(oldTableName)){
+            log.info("createTable error: old table {} is not existing", oldTableName);
+            throw new ApiException("createTable error: old table is not existing");
+        }
+        if(metadataService.isTableExisting(newTableName)){
+            log.info("createTable error: new table {} is already existing", newTableName);
+            throw new ApiException("createTable error: new Table is already existing");
+        }
+        String functionName = metadataService.getFunctionName(oldTableName);
+        List<String> types = new ArrayList<>();
+        for(String windColumn: windColumns){
+            String type = metadataService.getType(oldTableName, windColumn);
+            types.add(type);
+        }
+        List<Map<String, String>> metadataDetails = new ArrayList<>();
+        int len = windColumns.size();
+        for(int i = 0; i < len; ++i){
+            String userColumn = userColumns.get(i), windColumn = windColumns.get(i), dbColumn = dbColumns.get(i), type = types.get(i);
+            // add the metadataDetail
+            metadataDetails.add(new HashMap<String, String>(){{
+                put("tableName", newTableName);
+                put("windColumn", windColumn);
+                put("dbColumn", dbColumn);
+                put("userColumn", userColumn);
+                put("type", type);
+            }});
+        }
+        boolean ret = utils.createTable(newTableName, dbColumns, types);
+        ret = ret && metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
+        ret = ret && metadataService.insertTableMetadataDetail(metadataDetails);
+        ret = ret && synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
+
+        return ret;
+    }
+
+    @Override
+    public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) {
+        Boolean status = true;
+        for(String windCode: windCodes){
+            status = status && synchronizeCode(oldTableName, newTableName, windCode, startStr, endStr);
+        }
+        return status;
+    }
+
+    @Override
+    public Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr) {
+        try{
+            Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
+            Calendar c = Calendar.getInstance();
+            c.setTime(endDate);
+            c.add(Calendar.DATE, 1);
+            endDate = c.getTime();
+            c.clear();
+            Boolean status = true;
+
+            // 有该天的数据，但不全，需要从wind拿
+            // <date, [columns] > >
+            Map<String, List<String>> emptyCell = new HashMap<>();
+            for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
+                log.info("synchronize windCode: {}", windCode);
+                String dateStr = simpleDateFormat.format(cur);
+
+                // cache里有数据，优先从cache中拿
+                if(dataService.isLineExisting(oldTableName, windCode, dateStr)){
+                    log.info("cache hit");
+                    List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode, dateStr);
+                    if(result.size() > 1){
+                        log.info("more than one line data");
+                        throw new ApiException("more than one line data");
+                    }
+                    Map<String, Object> map = result.get(0);
+                    List<String> emptyColumn = new ArrayList<>();
+                    // windColumn - value
+                    for(Map.Entry<String, Object> entry: map.entrySet()){
+                        log.info("pair: {}", entry);
+                        String windColumn = entry.getKey();
+                        if(entry.getValue() == null && metadataService.isColumnExist(newTableName, windColumn)){
+                            emptyColumn.add(entry.getKey());
+                        }
+                    }
+                    emptyCell.put(dateStr, emptyColumn);
+                }else{
+                    // cache 里没数据，整天都要从wind拿
+                    log.info("cache miss");
+                    // 先查wind 如果有这么一天再进行更新
+
+                    List<String> emptyColumn = metadataService.queryColumnsOfTable(newTableName);
+                    emptyCell.put(dateStr, emptyColumn);
+                }
+
+                // 进行wind数据更新
+
+                c.setTime(cur);
+                c.add(Calendar.DATE, 1);
+            }
+            return status;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean FailCreateTable(String oldTableName, String newTableName, String functionName, String updateTime, String updateUser, String startStr, String endStr, List<String> windColumns, List<String> dbColumns, List<String> userColumns, List<String> types) throws Exception{
         if(!metadataService.isTableExisting(oldTableName)){
             log.info("createTable error: old table {} is not existing", oldTableName);
             throw new ApiException("createTable error: old table is not existing");
@@ -158,7 +202,7 @@ public class TableServiceImpl implements TableService {
             }});
         }
 
-        boolean ret = Utils.createTable(newTableName, dbColumns, types);
+        boolean ret = FailUtils.createTable(newTableName, dbColumns, types);
         ret = ret && metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
         ret = ret && metadataService.insertTableMetadataDetail(metadataDetails);
         ret = ret && synchronizeAllData(oldTableName, newTableName, windColumns, startStr, endStr);
@@ -174,7 +218,7 @@ public class TableServiceImpl implements TableService {
     public boolean deleteTable(String tableName){
         log.info("deleteTable: {}", tableName);
         try {
-            Utils.deleteTable(tableName);
+            FailUtils.deleteTable(tableName);
             return true;
         }catch (Exception e){
             e.printStackTrace();
@@ -199,7 +243,7 @@ public class TableServiceImpl implements TableService {
             throw new ApiException("addNewColumn error");
         }}
         boolean status = metadataService.insertTableMetadataOneDetail(tableName, newWindColumn, newDbColumn, newUserColumn, newColumnType);
-        Utils.addNewColumn(tableName, newDbColumn, newColumnType);
+        FailUtils.addNewColumn(tableName, newDbColumn, newColumnType);
         return status;
     }
 
@@ -218,9 +262,9 @@ public class TableServiceImpl implements TableService {
         }
         if(tradeDt != null){
             boolean status = true;
-            Set<String> existingWindCodes = Utils.getExistingWindCode(oldTableName, tradeDt, dateStr);
+            Set<String> existingWindCodes = FailUtils.getExistingWindCode(oldTableName, tradeDt, dateStr);
             for(String windCode: existingWindCodes){
-                String value = Utils.getData(oldTableName, windCode, dateStr, oldDbColumn);
+                String value = FailUtils.getData(oldTableName, windCode, dateStr, oldDbColumn);
                 // cache 中没有数据，从wind拿
                 if(value == null){
                     value = dataService.getDataFromWind(windCode, dateStr, windColumn);

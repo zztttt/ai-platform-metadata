@@ -8,13 +8,12 @@ import java.util.List;
 public class CreateTable {
     private String oldTableName;
     private String newTableName;
-    private String functionName;
     private String updateTime;
     private String updateUser;
     private String startStr;
     private String endStr;
+    private List<String> windCodes;
     private List<String> windColumns;
     private List<String> dbColumns;
     private List<String> userColumns;
-    private List<String> types;
 }

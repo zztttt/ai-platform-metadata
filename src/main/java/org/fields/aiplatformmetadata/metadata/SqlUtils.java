@@ -1,63 +1,105 @@
 package org.fields.aiplatformmetadata.metadata;
 
+import com.baomidou.mybatisplus.extension.exceptions.ApiException;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
+@Slf4j
+@Component
 public class SqlUtils {
-    // select db1, db2, ....,  from t1 where code = c1 and date = s1
-    public static String select(String tableName, String code, String date, List<String> attributions){
-        String sql = "select ";
-        String link = "";
-        for(String attibution: attributions){
-            sql += link + attibution;
-            link = ", ";
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    public Boolean isTableExisting(String tableName){
+        String sql = "show tables";
+        List<String> tables = jdbcTemplate.queryForList(sql, String.class);
+        for(String table: tables){
+            if(table.toLowerCase(Locale.ROOT).equals(tableName.toLowerCase(Locale.ROOT)))
+                return true;
         }
-        sql += " from " + tableName + " where s_info_windcode = " + code + " and trade_dt = " + date;
-        return sql;
+        return false;
     }
 
-    // update t1 set c1 = c1, c2 = c2, ... where cn = cn and cm = cm
-    public static String update(String tableName, String windCode, String date, List<String> attributions, List<String> values){
-        assert attributions.size() == values.size();
-        String sql = "update " + tableName + " set ";
+    public String isLineExisting(String tableName, String windCodeColumn, String dateColumn, String windCode, String dateStr){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(tableName).append(" where ")
+                .append(windCodeColumn).append("='").append(windCode).append("' and ")
+                .append(dateColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+    /**
+     * create table
+     * @return sql
+     */
+    public String createTable(String tableName, List<String> columns, List<String> columnTypes){
+        if(isTableExisting(tableName)){
+            log.info("table: {} is already existing", tableName);
+            throw new ApiException("table is already existing");
+        }
+        if(columns.size()!= columnTypes.size()){
+            log.info("createTable {}: columns and types size don't match, ", tableName);
+            throw new ApiException("createTable columns and types size don't match");
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("create table ").append(tableName).append("( id bigint(64) primary key not null auto_increment,");
+        int len = columns.size();
         String link = "";
-        int len = attributions.size();
         for(int i = 0; i < len; ++i){
-            sql += link + attributions.get(i) + " = " + values.get(i);
+            sb.append(link).append(columns.get(i)).append(" ").append(columnTypes.get(i)).append(" NULL");
             link = ",";
         }
-        sql += " where s_info_windcode = " + windCode + " and trade_dt = " + date;
-        return sql;
+        sb.append(")");
+        return sb.toString();
     }
-
-    // insert into t1 (c1, c2...) value (v1, v2...)
-    public static String insert(String tableName, String windCode, String date, List<String> attributions, List<String> values){
-        assert attributions.size() == values.size();
-        String sql = "insert into " + tableName + " (";
+    /**
+     * insert into t1 (c1, c2...) value (v1, v2...)
+     * @param tableName
+     * @param columns
+     * @param values
+     * @return sql
+     */
+    public String insertOneLine(String tableName, List<String> columns, List<String> values){
+        if(columns.size() != values.size()){
+            log.info("insertNewLine columns and types size don't match");
+            throw new ApiException("insertNewLine columns and types size don't match");
+        }
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ").append(tableName).append("(");
         String link = "";
-        for(String attribution: attributions){
-            sql += link + attribution;
+        int len = columns.size();
+        for(int i = 0;i < len; ++i){
+            sb.append(link).append(columns.get(i));
             link = ",";
         }
-        sql += ") value (";
+        sb.append(") value (");
         link = "";
-        for(String value: values){
-            sql += link + value;
+        for(int i = 0; i < len; ++i){
+            sb.append(link).append("'").append(values.get(i)).append("'");
             link = ",";
         }
-        sql += ")";
-        return sql;
-    }
-    // select * from table1 where d1(s_info_windcode) = windcode and d2(trade_dt) = 20190601
-    public static String selectLine(String tableName, String windDbColumn, String dateDbColumn, String windcode, String dateStr){
-        String sql = "select * from " + tableName + " where " + windDbColumn + " = " +  windcode + " and " + dateDbColumn + " = " + dateStr;
-        return sql;
+        sb.append(")");
+        return sb.toString();
     }
 
-    // select WINDCOLUMN from table1 where s_info_windcode = windcode and trade_dt = 20190601
-    public static String selectData(String tableName, String windcode, String dateStr, String windColumn){
-        String sql = "select " + windColumn + " from " + tableName +
-                " where s_info_windcode = " + windcode + " and trade_dt = " + dateStr;
-        return sql;
+    /**
+     * select * from t1 where windCodeDbColumn = 'windCode' and dateDbColumn = 'dateStr'
+     * @param tableName
+     * @param windCodeDbColumn
+     * @param dateDbColumn
+     * @param windCode
+     * @param dateStr
+     * @return
+     */
+    public String queryOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(tableName).append(" where ")
+                .append(windCodeDbColumn).append("='").append(windCode).append("' and ")
+                .append(dateDbColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
     }
 }

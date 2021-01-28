@@ -12,6 +12,7 @@ import org.fields.aiplatformmetadata.metadata.mapper.MetadataMapper;
 import org.fields.aiplatformmetadata.metadata.mapper.TaskMapper;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +27,8 @@ public class MetadataServiceImpl implements MetadataService {
     MetadataDetailMapper metadataDetailMapper;
     @Autowired
     TaskMapper taskMapper;
+    @Autowired
+    JdbcTemplate jdbcTemplate;
 
     /**
      * @param tableName 数据库表名
@@ -37,12 +40,6 @@ public class MetadataServiceImpl implements MetadataService {
         queryWrapper.eq("tableName", tableName);
         Metadata metadata = metadataMapper.selectOne(queryWrapper);
         return metadata != null;
-    }
-
-    @Override
-    public boolean isTaskExisting(String tableName) {
-        // TODO
-        return false;
     }
 
     /**
@@ -66,6 +63,15 @@ public class MetadataServiceImpl implements MetadataService {
     }
 
     @Override
+    public List<String> queryColumnsOfTable(String tableName) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName);
+        String sql = "select windColumn from metadatadetail where tableName = '" + tableName + "'";
+        List<String> ret = jdbcTemplate.queryForList(sql, String.class);
+        return ret;
+    }
+
+    @Override
     public String getWindCodeForDbColumn(String tableName) {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName).eq("windColumn", "windcode");
@@ -81,6 +87,22 @@ public class MetadataServiceImpl implements MetadataService {
         return metadataDetail.getDbColumn();
     }
 
+    @Override
+    public String getType(String tableName, String windColumn) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("windColumn", windColumn);
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        return metadataDetail.getType();
+    }
+
+    @Override
+    public String getFunctionName(String tableName) {
+        QueryWrapper<Metadata> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName);
+        Metadata metadata = metadataMapper.selectOne(queryWrapper);
+        return metadata.getFunc();
+    }
+
     /**
      * @param tableName 数据库表名
      * @param windColumn 指定的wind field
@@ -92,32 +114,6 @@ public class MetadataServiceImpl implements MetadataService {
         queryWrapper.eq("tableName", tableName).eq("windColumn", windColumn);
         MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
         return metadataDetail == null? false: true;
-    }
-
-    private MetadataDetail queryMetadataDetailFromUserColumn(String tableName, String userColumn){
-        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("tableName", tableName).eq("userColumn", userColumn);
-        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
-        if(metadataDetail == null){
-            log.info("queryMetadataDetailFromUserColumn error");
-            throw new ApiException("queryMetadataDetailFromUserColumn error");
-        }
-        return metadataDetail;
-    }
-    @Override
-    public String queryDbColumnFromUserColumn(String tableName, String userColumn) {
-        return queryMetadataDetailFromUserColumn(tableName, userColumn).getDbColumn();
-    }
-
-    @Override
-    public String queryWindColumnFromUserColumn(String tableName, String userColumn) {
-        return queryMetadataDetailFromUserColumn(tableName, userColumn).getWindColumn();
-    }
-
-
-    @Override
-    public String queryTypeFromUserColumn(String tableName, String userColumn) {
-        return queryMetadataDetailFromUserColumn(tableName, userColumn).getType();
     }
 
     @Override
@@ -137,10 +133,6 @@ public class MetadataServiceImpl implements MetadataService {
         return windColumn2MetadataDetail(tableName, windColumn).getDbColumn();
     }
 
-    @Override
-    public String windColumn2UserColumn(String tableName, String windColumn) {
-        return windColumn2MetadataDetail(tableName, windColumn).getUserColumn();
-    }
 
     /**
      * @param tableName 表名

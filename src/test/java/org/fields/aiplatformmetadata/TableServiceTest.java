@@ -1,6 +1,6 @@
 package org.fields.aiplatformmetadata;
 
-import org.fields.aiplatformmetadata.metadata.Utils;
+import org.fields.aiplatformmetadata.metadata.FailUtils;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.junit.After;
@@ -141,9 +141,9 @@ public class TableServiceTest {
             add(list.get(10).get("type"));
         }};
         Assert.assertTrue(tableService.createTableBase(oldTableName, columns, types));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
-        Assert.assertTrue(Utils.insertIntoTable(oldTableName, columns));
+        Assert.assertTrue(FailUtils.insertIntoTable(oldTableName, columns));
+        Assert.assertTrue(FailUtils.insertIntoTable(oldTableName, columns));
+        Assert.assertTrue(FailUtils.insertIntoTable(oldTableName, columns));
 
         Assert.assertTrue(metadataService.insertTableMetadata(oldTableName, functionName, oldUpdateTime, rootUpdateUser));
         Assert.assertTrue(metadataService.insertTableMetadataDetail(list));

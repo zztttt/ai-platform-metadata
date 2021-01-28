@@ -1,7 +1,7 @@
 package org.fields.aiplatformmetadata;
 
 
-import org.fields.aiplatformmetadata.metadata.SqlUtils;
+import org.fields.aiplatformmetadata.metadata.FailSqlUtils;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class SqlUtilTest {
             add("s_dq_open");
             add("s_dq_avgprice");
         }};
-        String sql = SqlUtils.select(tableName, code, date, attributions);
+        String sql = FailSqlUtils.select(tableName, code, date, attributions);
         System.out.println(sql);
     }
     @Test
@@ -33,7 +33,7 @@ public class SqlUtilTest {
            add("value2");
            add("value3");
         }};
-        String sql = SqlUtils.update(tableName, code, date, attributions, values);
+        String sql = FailSqlUtils.update(tableName, code, date, attributions, values);
         System.out.println(sql);
     }
 
@@ -49,7 +49,7 @@ public class SqlUtilTest {
             add("value2");
             add("value3");
         }};
-        String sql = SqlUtils.insert(tableName, code, date, attributions, values);
+        String sql = FailSqlUtils.insert(tableName, code, date, attributions, values);
         System.out.println(sql);
     }
 

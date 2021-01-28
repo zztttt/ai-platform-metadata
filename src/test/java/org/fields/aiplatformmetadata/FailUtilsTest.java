@@ -1,6 +1,6 @@
 package org.fields.aiplatformmetadata;
 
-import org.fields.aiplatformmetadata.metadata.Utils;
+import org.fields.aiplatformmetadata.metadata.FailUtils;
 import org.junit.AfterClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -15,29 +15,29 @@ import java.util.List;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class UtilsTest {
+public class FailUtilsTest {
     private final static String tableName = "testtable";
     private final static List<String> columns = new ArrayList<String>(){{add("column1");}};
     private final static List<String> types = new ArrayList<String>(){{add("varchar(1)");}};
 
     @Test
     public void step1() throws Exception{
-        Utils.createTable(tableName, columns, types);
+        FailUtils.createTable(tableName, columns, types);
     }
 
     @Test
     public void step2() throws Exception{
-        Utils.addNewColumn(tableName, "column2", "varchar(2)");
+        FailUtils.addNewColumn(tableName, "column2", "varchar(2)");
     }
 
     @Test
     public void step3() throws Exception{
-        Utils.addNewColumn(tableName, "column3", "varchar(3)");
+        FailUtils.addNewColumn(tableName, "column3", "varchar(3)");
     }
 
     @Test
     public void step4() throws Exception{
-        Utils.getExistingWindCode("wind_ashareeodprices_test", "trade_dt", "20190601");
+        FailUtils.getExistingWindCode("wind_ashareeodprices_test", "trade_dt", "20190601");
     }
 
     @AfterClass

@@ -8,20 +8,20 @@ import java.util.Map;
 
 public interface MetadataService {
     boolean isTableExisting(String tableName);
-    boolean isTaskExisting(String tableName);
+
+    String getWindCodeForDbColumn(String tableName);
+    String getTradeDtForDbColumn(String tableName);
+    String getType(String tableName, String windColumn);
+    String getFunctionName(String tableName);
 
     Metadata queryMetadata(String tableName);
     List<MetadataDetail> queryMetadataDetails(String tableName);
-    String getWindCodeForDbColumn(String tableName);
-    String getTradeDtForDbColumn(String tableName);
+    List<String> queryColumnsOfTable(String tableName);
+
     boolean isColumnExist(String tableName, String windColumn);
-    String queryDbColumnFromUserColumn(String tableName, String userColumn);
-    String queryWindColumnFromUserColumn(String tableName, String userColumn);
-    String queryTypeFromUserColumn(String tableName, String userColumn);
 
     MetadataDetail windColumn2MetadataDetail(String tableName, String windColumn);
     String windColumn2DbColumn(String tableName, String windColumn);
-    String windColumn2UserColumn(String tableName, String windColumn);
 
     boolean insertTableMetadata(String tableName, String func, String updateTime, String updateUser);
     boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type);

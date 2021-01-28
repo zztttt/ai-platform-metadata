@@ -2,6 +2,7 @@ package org.fields.aiplatformmetadata.metadata.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.fields.aiplatformmetadata.common.RespResult;
 import org.fields.aiplatformmetadata.metadata.entity.RequestDemo;
 import org.fields.aiplatformmetadata.metadata.entity.request.CreateTable;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
@@ -34,23 +35,40 @@ public class TableController {
     }
 
     @PostMapping("/create")
-    public JSONObject create(@RequestBody CreateTable createTable) throws Exception{
+    public RespResult create(@RequestBody CreateTable createTable){
         log.info("receive: {}", createTable);
-        JSONObject ret = new JSONObject();
-        //tableService.checkAndInitRootTables();
-        boolean status = tableService.createTable(
+        Boolean status = tableService.createTable(
                 createTable.getOldTableName(),
                 createTable.getNewTableName(),
-                createTable.getFunctionName(),
                 createTable.getUpdateTime(),
                 createTable.getUpdateUser(),
                 createTable.getStartStr(),
                 createTable.getEndStr(),
+                createTable.getWindCodes(),
                 createTable.getWindColumns(),
                 createTable.getDbColumns(),
-                createTable.getUserColumns(),
-                createTable.getTypes());
-        ret.put("code", status?200:404);
+                createTable.getUserColumns());
+        return status? RespResult.success(""): RespResult.fail();
+    }
+
+    @PostMapping("/failCreate")
+    public JSONObject failCreate(@RequestBody CreateTable createTable) throws Exception{
+        log.info("receive: {}", createTable);
+        JSONObject ret = new JSONObject();
+        //tableService.checkAndInitRootTables();
+//        boolean status = tableService.FailCreateTable(
+//                createTable.getOldTableName(),
+//                createTable.getNewTableName(),
+//                createTable.getFunctionName(),
+//                createTable.getUpdateTime(),
+//                createTable.getUpdateUser(),
+//                createTable.getStartStr(),
+//                createTable.getEndStr(),
+//                createTable.getWindColumns(),
+//                createTable.getDbColumns(),
+//                createTable.getUserColumns(),
+//                createTable.getTypes());
+//        ret.put("code", status?200:404);
         return ret;
     }
 }
