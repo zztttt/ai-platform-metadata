@@ -11,7 +11,7 @@ import java.util.Locale;
 
 @Slf4j
 @Component
-public class SqlUtilsTmp {
+public class SqlUtils {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
@@ -86,6 +86,27 @@ public class SqlUtilsTmp {
         return sb.toString();
     }
 
+    public String insertOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ").append(tableName).append("(").append(windCodeDbColumn).append(",").append(dateDbColumn)
+                .append(") value (").append("'").append(windCode).append("','").append(dateStr).append("')");
+        return sb.toString();
+    }
+
+    public String updateOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr, List<String> windColumns, List<String> values){
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ").append(tableName).append(" set ");
+        String link = "";
+        int len = windColumns.size();
+        for(int i = 0; i < len; ++i){
+            sb.append(link).append(windColumns.get(i)).append("='").append(values.get(i)).append("'");
+            link = ",";
+        }
+        sb.append(" where ").append(windCodeDbColumn).append("='").append(windCode).append("' and ")
+                .append(dateDbColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+
     /**
      * select * from t1 where windCodeDbColumn = 'windCode' and dateDbColumn = 'dateStr'
      * @param tableName
@@ -98,6 +119,14 @@ public class SqlUtilsTmp {
     public String queryOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){
         StringBuilder sb = new StringBuilder();
         sb.append("select * from ").append(tableName).append(" where ")
+                .append(windCodeDbColumn).append("='").append(windCode).append("' and ")
+                .append(dateDbColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+
+    public String queryOneCell(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr, String windColmn){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select ").append(windCode).append(" from ").append(tableName).append(" where ")
                 .append(windCodeDbColumn).append("='").append(windCode).append("' and ")
                 .append(dateDbColumn).append("='").append(dateStr).append("'");
         return sb.toString();

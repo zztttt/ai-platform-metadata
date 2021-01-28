@@ -6,6 +6,7 @@ import org.fields.aiplatformmetadata.common.RespResult;
 import org.fields.aiplatformmetadata.metadata.entity.RequestDemo;
 import org.fields.aiplatformmetadata.metadata.entity.request.CreateTable;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
+import org.fields.aiplatformmetadata.metadata.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,8 @@ import java.util.List;
 public class TableController {
     @Autowired
     TableService tableService;
+    @Autowired
+    TaskService taskService;
 
     @GetMapping("test")
     public String test(){
@@ -49,26 +52,5 @@ public class TableController {
                 createTable.getDbColumns(),
                 createTable.getUserColumns());
         return status? RespResult.success(""): RespResult.fail();
-    }
-
-    @PostMapping("/failCreate")
-    public JSONObject failCreate(@RequestBody CreateTable createTable) throws Exception{
-        log.info("receive: {}", createTable);
-        JSONObject ret = new JSONObject();
-        //tableService.checkAndInitRootTables();
-//        boolean status = tableService.FailCreateTable(
-//                createTable.getOldTableName(),
-//                createTable.getNewTableName(),
-//                createTable.getFunctionName(),
-//                createTable.getUpdateTime(),
-//                createTable.getUpdateUser(),
-//                createTable.getStartStr(),
-//                createTable.getEndStr(),
-//                createTable.getWindColumns(),
-//                createTable.getDbColumns(),
-//                createTable.getUserColumns(),
-//                createTable.getTypes());
-//        ret.put("code", status?200:404);
-        return ret;
     }
 }

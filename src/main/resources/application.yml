@@ -17,3 +17,8 @@ spring:
     time-zone: GMT+8
 #    default-property-inclusion: non_null
 
+server:
+  port: 8080
+
+python:
+  script: D:/REINS/MinHuan/ai-platform-metadata/src/main/resources/scripts/

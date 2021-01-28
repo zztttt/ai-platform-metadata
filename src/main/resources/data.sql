@@ -7,8 +7,8 @@ DROP TABLE IF EXISTS wind_ashareeodprices_test;
 CREATE TABLE metadata
 (
 	id BIGINT(64) NOT NULL,
-    tablename VARCHAR(40) NULL,
-    func VARCHAR(10) NULL,
+    tablename VARCHAR(50) NULL,
+    func VARCHAR(5) NULL,
     updatetime VARCHAR(8) NULL,
     updateuser VARCHAR(20) NULL,
     PRIMARY KEY (id)
@@ -17,7 +17,7 @@ CREATE TABLE metadata
 CREATE TABLE metadatadetail
 (
 	id BIGINT(64) NOT NULL,
-    tablename VARCHAR(40) NULL,
+    tablename VARCHAR(50) NULL,
     windcolumn VARCHAR(40) NULL,
     dbcolumn VARCHAR(40) NULL,
     usercolumn VARCHAR(40) NULL,

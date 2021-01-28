@@ -18,6 +18,7 @@ public interface MetadataService {
     List<MetadataDetail> queryMetadataDetails(String tableName);
     List<String> queryColumnsOfTable(String tableName);
 
+
     boolean isColumnExist(String tableName, String windColumn);
 
     MetadataDetail windColumn2MetadataDetail(String tableName, String windColumn);
