@@ -23,6 +23,7 @@ public interface MetadataService {
 
     MetadataDetail windColumn2MetadataDetail(String tableName, String windColumn);
     String windColumn2DbColumn(String tableName, String windColumn);
+    String dbColumn2windColumn(String tableName, String dbColumn);
 
     boolean insertTableMetadata(String tableName, String func, String updateTime, String updateUser);
     boolean insertTableMetadataOneDetail(String tableName, String windColumn, String dbcolumn, String userColumn, String type);

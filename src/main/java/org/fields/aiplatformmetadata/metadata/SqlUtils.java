@@ -93,13 +93,13 @@ public class SqlUtils {
         return sb.toString();
     }
 
-    public String updateOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr, List<String> windColumns, List<String> values){
+    public String updateOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr, List<String> dbColumns, List<Object> values){
         StringBuilder sb = new StringBuilder();
         sb.append("update ").append(tableName).append(" set ");
         String link = "";
-        int len = windColumns.size();
+        int len = dbColumns.size();
         for(int i = 0; i < len; ++i){
-            sb.append(link).append(windColumns.get(i)).append("='").append(values.get(i)).append("'");
+            sb.append(link).append(dbColumns.get(i)).append("='").append(values.get(i)).append("'");
             link = ",";
         }
         sb.append(" where ").append(windCodeDbColumn).append("='").append(windCode).append("' and ")

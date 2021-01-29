@@ -10,6 +10,7 @@ import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class Utils {
     public Boolean isLineExisting(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){
         String sql = sqlUtils.isLineExisting(tableName, windCodeDbColumn, dateDbColumn, windCode, dateStr);
         log.info("isLineExisting: {}", sql);
-        List<String> result = jdbcTemplate.queryForList(sql, String.class);
+        List<Map<String, Object>> result = jdbcTemplate.queryForList(sql);
         return result.size() > 0;
     }
 
@@ -62,10 +63,14 @@ public class Utils {
         return ret == 1;
     }
 
-    public Boolean updateOneLine(String tableName, String windCode, String dateStr, List<String> windColumns, List<String> values){
+    public Boolean updateOneLine(String tableName, String windCode, String dateStr, List<String> windColumns, List<Object> values){
         String windCodeDbColumn = metadataService.getWindCodeForDbColumn(tableName);
         String dateDbColumn = metadataService.getTradeDtForDbColumn(tableName);
-        String sql =sqlUtils.updateOneLine(tableName, windCodeDbColumn, dateDbColumn, windCode, dateStr, windColumns, values);
+        List<String> dbColumns = new ArrayList<>();
+        for(String windColumn: windColumns){
+            dbColumns.add(metadataService.windColumn2DbColumn(tableName, windColumn));
+        }
+        String sql =sqlUtils.updateOneLine(tableName, windCodeDbColumn, dateDbColumn, windCode, dateStr, dbColumns, values);
         int ret = jdbcTemplate.update(sql);
         return ret == 1;
     }

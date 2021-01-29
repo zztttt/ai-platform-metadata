@@ -98,40 +98,48 @@ public class TableServiceImpl implements TableService {
                     List<String> emptyColumn = new ArrayList<>();
                     // windColumn - value
                     List<String> nonEmptyColumn = new ArrayList<>();
+                    List<Object> oldValues = new ArrayList<>();
                     for(Map.Entry<String, Object> entry: map.entrySet()){
+                        if(entry.getKey().equals("id"))
+                            continue;
                         log.info("pair: {}", entry);
-                        String windColumn = entry.getKey();
+                        String windColumn = metadataService.dbColumn2windColumn(oldTableName, entry.getKey());
                         if(metadataService.isColumnExist(newTableName, windColumn)){
                             if(entry.getValue() == null){
-                                emptyColumn.add(entry.getKey());
+                                emptyColumn.add(windColumn);
                             }else{
-                                nonEmptyColumn.add(entry.getKey());
+                                nonEmptyColumn.add(windColumn);
+                                oldValues.add(entry.getValue());
                             }
                         }
                     }
-                    // pull old data
-                    List<String> oldValues = new ArrayList<>();
-                    for(String s: nonEmptyColumn){
-                        String value = utils.queryOneCell(oldTableName, windCode, dateStr, s);
-                        oldValues.add(value);
-                    }
-                    utils.updateOneLine(newTableName, windCode, dateStr, nonEmptyColumn, oldValues);
+                    // pull old data from cache
+                    // s_info_code 和 trade_dt 这两列当主键来用的
+                    status = status && utils.insertOneLine(newTableName, windCode, dateStr);
+                    status = status &&  utils.updateOneLine(newTableName, windCode, dateStr, nonEmptyColumn, oldValues);
+
+
                     // pull new data
-                    List<String> values = new ArrayList<>();
+                    List<Object> values = new ArrayList<>();
                     for(String windColumn: emptyColumn){
                         String[] args = new String[3];args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
-                        String value = utils.callScript(args);
+                        //String value = utils.callScript(args);
+                        String value = "12.34";
                         values.add(value);
                     }
-                    utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
-                    utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
+                    if(emptyColumn.size() > 0){
+                        utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
+                        utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
+                    }
+
                 }else{
                     // cache 里没数据，整天都要从wind拿
                     log.info("cache miss");
                     // 先查wind 如果有这么一天再进行更新
                     String[] args = new String[3];
                     args[0] = windCode; args[1] = dateStr; args[2] = windCode;
-                    String ret = utils.callScript(args);
+                    //String ret = utils.callScript(args);
+                    String ret = null;
                     if(ret == null){
                         // 当天没有数据
                     }else{
@@ -146,7 +154,7 @@ public class TableServiceImpl implements TableService {
                                 emptyColumn.add(windColumn);
                             }
                         }
-                        List<String> values = new ArrayList<>();
+                        List<Object> values = new ArrayList<>();
                         for(String windColumn: emptyColumn){
                             String[] arg = new String[3];arg[0]=windCode;arg[1]=dateStr;arg[2]=windColumn;
                             String value = utils.callScript(arg);
