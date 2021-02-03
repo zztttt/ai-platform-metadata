@@ -4,10 +4,9 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.common.RespResult;
+import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.entity.RequestDemo;
-import org.fields.aiplatformmetadata.metadata.entity.request.Column;
-import org.fields.aiplatformmetadata.metadata.entity.request.CreateTable;
-import org.fields.aiplatformmetadata.metadata.entity.request.GetWindTableDetails;
+import org.fields.aiplatformmetadata.metadata.entity.request.*;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.fields.aiplatformmetadata.metadata.service.TaskService;
@@ -68,7 +67,6 @@ public class TableController {
                 dbColumns,
                 userColumns);
         return status? RespResult.success(""): RespResult.fail();
-        //return RespResult.success("");
     }
 
     @PostMapping("/getWindTableDetails")
@@ -77,5 +75,31 @@ public class TableController {
         String windTableName = getWindTableDetails.getWindTableName();
         JSONArray ret = metadataService.getWindTableDetails(windTableName);
         return RespResult.success(ret);
+    }
+
+    @PostMapping("/update")
+    public RespResult update(@RequestBody UpdateTable updateTable){
+        log.info("update: {}", updateTable);
+        List<UpdateColumn> updateColumns = updateTable.getColumns();
+        List<String> windColumns = new ArrayList<>();
+        for(UpdateColumn updateColumn: updateColumns){
+            windColumns.add(updateColumn.getWindColumn());
+        }
+        Boolean status = true;
+        try {
+            status = status && tableService.updateTable(
+                    updateTable.getOldTableName(),
+                    updateTable.getNewTableName(),
+                    updateTable.getUpdateTime(),
+                    updateTable.getUpdateUser(),
+                    updateTable.getTimeRange().get(0),
+                    updateTable.getTimeRange().get(1),
+                    updateTable.getWindCodes(),
+                    windColumns);
+            return status? RespResult.success(""): RespResult.fail();
+        }catch (ApiException e){
+            String error = e.getMessage();
+            return RespResult.fail(400L, error);
+        }
     }
 }

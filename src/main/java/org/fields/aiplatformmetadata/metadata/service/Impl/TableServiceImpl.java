@@ -24,6 +24,27 @@ public class TableServiceImpl implements TableService {
 
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
+
+    @Override
+    public Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns) throws ApiException {
+        if (!metadataService.isTableExisting(oldTableName)) {
+            log.info("updateTable error: old table {} is not existing", oldTableName);
+            throw new ApiException("createTable error: old table is not existing");
+        }
+        if (!metadataService.isTableExisting(newTableName)) {
+            log.info("updateTable error: new table {} is not existing", newTableName);
+            throw new ApiException("createTable error: new Table is already existing");
+        }
+        Boolean status = true;
+        try {
+            status = status && synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
+        }catch (ApiException e){
+            throw e;
+        }finally {
+            return status;
+        }
+    }
+
     @Override
     public Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> dbColumns, List<String> userColumns) {
         if (!metadataService.isTableExisting(oldTableName)) {
