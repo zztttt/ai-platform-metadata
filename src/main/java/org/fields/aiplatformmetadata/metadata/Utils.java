@@ -70,7 +70,7 @@ public class Utils {
         for(String windColumn: windColumns){
             dbColumns.add(metadataService.windColumn2DbColumn(tableName, windColumn));
         }
-        String sql =sqlUtils.updateOneLine(tableName, windCodeDbColumn, dateDbColumn, windCode, dateStr, dbColumns, values);
+        String sql = sqlUtils.updateOneLine(tableName, windCodeDbColumn, dateDbColumn, windCode, dateStr, dbColumns, values);
         int ret = jdbcTemplate.update(sql);
         return ret == 1;
     }

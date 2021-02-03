@@ -13,7 +13,7 @@ password = "Zzt19980924x"
 db = MySQLdb.connect(url, user, password, "wind", charset='utf8' )
 cursor = db.cursor()
 
-# 000001.SZ 20190603 high
+    # 000001.SZ 20190603 high
 def wsd(code, date, wind_column):
     tmp = datetime.strptime(date, "%Y%m%d")
     date = datetime.strftime(tmp, "%Y-%m-%d")

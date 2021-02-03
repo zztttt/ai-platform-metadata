@@ -1,5 +1,7 @@
 package org.fields.aiplatformmetadata.metadata.service;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import org.fields.aiplatformmetadata.metadata.entity.Metadata;
 import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 
@@ -13,10 +15,11 @@ public interface MetadataService {
     String getTradeDtForDbColumn(String tableName);
     String getType(String tableName, String windColumn);
     String getFunctionName(String tableName);
+    JSONArray getWindTableDetails(String windTableDetails);
 
     Metadata queryMetadata(String tableName);
     List<MetadataDetail> queryMetadataDetails(String tableName);
-    List<String> queryColumnsOfTable(String tableName);
+    List<String> queryWindColumnsOfTable(String tableName);
 
 
     boolean isColumnExist(String tableName, String windColumn);

@@ -102,7 +102,7 @@ public class TableServiceImpl implements TableService {
                     for(Map.Entry<String, Object> entry: map.entrySet()){
                         if(entry.getKey().equals("id"))
                             continue;
-                        log.info("pair: {}", entry);
+                        //log.info("pair: {}", entry);
                         String windColumn = metadataService.dbColumn2windColumn(oldTableName, entry.getKey());
                         if(metadataService.isColumnExist(newTableName, windColumn)){
                             if(entry.getValue() == null){
@@ -113,18 +113,16 @@ public class TableServiceImpl implements TableService {
                             }
                         }
                     }
-                    // pull old data from cache
-                    // s_info_code 和 trade_dt 这两列当主键来用的
+                    // pull old data from cache, s_info_code 和 trade_dt 这两列当主键来用的
                     status = status && utils.insertOneLine(newTableName, windCode, dateStr);
                     status = status &&  utils.updateOneLine(newTableName, windCode, dateStr, nonEmptyColumn, oldValues);
-
-
                     // pull new data
                     List<Object> values = new ArrayList<>();
                     for(String windColumn: emptyColumn){
-                        String[] args = new String[3];args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
-                        //String value = utils.callScript(args);
-                        String value = "12.34";
+                        String[] args = new String[3];
+                        args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
+                        String value = utils.callScript(args);
+                        //String value = "12.34";
                         values.add(value);
                     }
                     if(emptyColumn.size() > 0){
@@ -137,31 +135,34 @@ public class TableServiceImpl implements TableService {
                     log.info("cache miss");
                     // 先查wind 如果有这么一天再进行更新
                     String[] args = new String[3];
-                    args[0] = windCode; args[1] = dateStr; args[2] = windCode;
-                    //String ret = utils.callScript(args);
-                    String ret = null;
+                    args[0] = windCode; args[1] = dateStr; args[2] = "windcode";
+                    String ret = utils.callScript(args);
+                    //String ret = null;
                     if(ret == null){
-                        // 当天没有数据
+                        // 当天没有数据, skip
                     }else{
                         // 当天有数据
-                        utils.insertOneLine(newTableName, windCode, dateStr);
-                        List<String> emptyColumn = new ArrayList<>();
-                        List<Map<String, Object>> result = dataService.queryOneLineFromCache(newTableName, windCode, dateStr);
-                        Map<String, Object> line = result.get(0);
-                        for(Map.Entry<String, Object> entry: line.entrySet()){
-                            String windColumn = entry.getKey();
-                            if(entry.getValue() == null){
-                                emptyColumn.add(windColumn);
-                            }
-                        }
+                        status = status && utils.insertOneLine(oldTableName, windCode, dateStr);
+                        status = status && utils.insertOneLine(newTableName, windCode, dateStr);
+
+                        List<String> windColumns = metadataService.queryWindColumnsOfTable(newTableName);
                         List<Object> values = new ArrayList<>();
-                        for(String windColumn: emptyColumn){
-                            String[] arg = new String[3];arg[0]=windCode;arg[1]=dateStr;arg[2]=windColumn;
-                            String value = utils.callScript(arg);
+                        for(String windColumn: windColumns){
+                            String[] arg = new String[3];
+                            arg[0]=windCode;arg[1]=dateStr;arg[2]=windColumn;
+                            String value = null;
+                            if(windColumn.equals("windcode")){
+                                value = windCode;
+                            }else if (windColumn.equals("lastradeday_s")){
+                                value = dateStr;
+                            }else{
+                                value = utils.callScript(arg);
+                            }
+                            assert value != null;
                             values.add(value);
                         }
-                        utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
-                        utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
+                        status = status && utils.updateOneLine(newTableName, windCode, dateStr, windColumns, values);
+                        status = status && utils.updateOneLine(oldTableName, windCode, dateStr, windColumns, values);
                     }
                 }
                 c.setTime(cur);

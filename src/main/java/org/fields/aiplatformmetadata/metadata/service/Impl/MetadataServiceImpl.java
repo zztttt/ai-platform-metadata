@@ -1,5 +1,7 @@
 package org.fields.aiplatformmetadata.metadata.service.Impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -63,7 +66,7 @@ public class MetadataServiceImpl implements MetadataService {
     }
 
     @Override
-    public List<String> queryColumnsOfTable(String tableName) {
+    public List<String> queryWindColumnsOfTable(String tableName) {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName);
         String sql = "select windColumn from metadatadetail where tableName = '" + tableName + "'";
@@ -101,6 +104,22 @@ public class MetadataServiceImpl implements MetadataService {
         queryWrapper.eq("tableName", tableName);
         Metadata metadata = metadataMapper.selectOne(queryWrapper);
         return metadata.getFunc();
+    }
+
+    @Override
+    public JSONArray getWindTableDetails(String windTableName) {
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", windTableName);
+        List<MetadataDetail> metadataDetails = metadataDetailMapper.selectList(queryWrapper);
+
+        JSONArray array = new JSONArray();
+        for(MetadataDetail metadataDetail: metadataDetails){
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put("windColumn", metadataDetail.getWindColumn());
+            jsonObject.put("userColumn", metadataDetail.getUserColumn());
+            array.add(jsonObject);
+        }
+        return array;
     }
 
     /**

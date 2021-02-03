@@ -10,10 +10,12 @@ public class CreateTable {
     private String newTableName;
     private String updateTime;
     private String updateUser;
-    private String startStr;
-    private String endStr;
+//    private String startStr;
+//    private String endStr;
+    private List<String> timeRange;
     private List<String> windCodes;
-    private List<String> windColumns;
-    private List<String> dbColumns;
-    private List<String> userColumns;
+    private List<Column> columns;
+//    private List<String> windColumns;
+//    private List<String> dbColumns;
+//    private List<String> userColumns;
 }

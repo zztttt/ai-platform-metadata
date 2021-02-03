@@ -3,9 +3,9 @@ spring:
     active: prod
 
   datasource:
-    username: zzt
-    password: Zzt19980924x
-    url: jdbc:mysql://rm-uf67ktcrjo69g32viko.mysql.rds.aliyuncs.com:3306/wind?useSSL=false&characterEncoding=utf-8&serverTimezone=GMT%2B8
+    username: fields_code
+    password: Fields+123
+    url: jdbc:mysql://rm-uf68frea8d8ny3sn8ao.mysql.rds.aliyuncs.com:3306/wind?useSSL=false&characterEncoding=utf-8&serverTimezone=GMT%2B8
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
 
