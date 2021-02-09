@@ -2,6 +2,7 @@ package org.fields.aiplatformmetadata.metadata.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.common.RespResult;
 import org.fields.aiplatformmetadata.exception.ApiException;
@@ -48,25 +49,38 @@ public class TableController {
         log.info("receive: {}", createTable);
         List<Column> columns = createTable.getColumns();
         List<String> windColumns = new ArrayList<>();
-        List<String> dbColumns = new ArrayList<>();
+        //List<String> dbColumns = new ArrayList<>();
         List<String> userColumns = new ArrayList<>();
         for(Column column: columns){
             windColumns.add(column.getWindColumn());
-            dbColumns.add(column.getDbColumn());
+            //dbColumns.add(column.getDbColumn());
             userColumns.add(column.getUserColumn());
         }
-        Boolean status = tableService.createTable(
-                createTable.getOldTableName(),
-                createTable.getNewTableName(),
-                createTable.getUpdateTime(),
-                createTable.getUpdateUser(),
-                createTable.getTimeRange().get(0),
-                createTable.getTimeRange().get(1),
-                createTable.getWindCodes(),
-                windColumns,
-                dbColumns,
-                userColumns);
-        return status? RespResult.success(""): RespResult.fail();
+        try{
+            Boolean status = tableService.createTable(
+                    createTable.getOldTableName(),
+                    createTable.getNewTableName(),
+                    createTable.getUpdateTime(),
+                    createTable.getUpdateUser(),
+                    createTable.getTimeRange().get(0),
+                    createTable.getTimeRange().get(1),
+                    createTable.getWindCodes(),
+                    windColumns,
+                    userColumns);
+            return status? RespResult.success(""): RespResult.fail();
+        } catch (Exception e){
+            return RespResult.fail(500L, e.getMessage());
+        }
+
+    }
+
+    @GetMapping("/getWindTableName")
+    public RespResult getWindTableName(){
+        log.info("getWindTableName");
+        JSONArray data = new JSONArray();
+        data.add("wind_AShareEODPrices_test");
+        data.add("wind_CCommodity_test");
+        return RespResult.success(data);
     }
 
     @PostMapping("/getWindTableDetails")
@@ -97,7 +111,7 @@ public class TableController {
                     updateTable.getWindCodes(),
                     windColumns);
             return status? RespResult.success(""): RespResult.fail();
-        }catch (ApiException e){
+        }catch (Exception e){
             String error = e.getMessage();
             return RespResult.fail(400L, error);
         }

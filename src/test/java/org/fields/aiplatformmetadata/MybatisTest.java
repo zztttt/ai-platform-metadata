@@ -2,6 +2,8 @@ package org.fields.aiplatformmetadata;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import lombok.extern.slf4j.Slf4j;
+import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.entity.Metadata;
 import org.fields.aiplatformmetadata.metadata.entity.MetadataDetail;
 import org.fields.aiplatformmetadata.metadata.entity.Task;
@@ -17,6 +19,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class MybatisTest {
@@ -26,6 +29,23 @@ public class MybatisTest {
     MetadataDetailMapper metadataDetailMapper;
     @Autowired
     TaskMapper taskMapper;
+
+    public String dbColumn2windColumn(String tableName, String dbColumn) {
+        log.info("dbColumn2windColumn. tableName: {}, dbColumn: {}", tableName, dbColumn);
+        QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("tableName", tableName).eq("dbColumn", dbColumn);
+        MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        if(metadataDetail == null){
+            log.info("metadataDetail is null");
+            throw new ApiException("metadataDetail is null");
+        }
+        return metadataDetail.getWindColumn();
+    }
+    @Test
+    public void test(){
+        String ret = dbColumn2windColumn("wind_CCommodityFuturesEODPrices_test", "s_info_windcode");
+        log.info(ret);
+    }
 
     @Test
     public void selectListTest() {

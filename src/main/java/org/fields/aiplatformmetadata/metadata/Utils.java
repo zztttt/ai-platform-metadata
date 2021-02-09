@@ -1,9 +1,11 @@
 package org.fields.aiplatformmetadata.metadata;
 
+import com.baomidou.mybatisplus.extension.exceptions.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.common.Constant;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -35,11 +37,15 @@ public class Utils {
         return result.size() > 0;
     }
 
-    public Boolean createTable(String tableName, List<String> columns, List<String> columnsTypes){
+    public Boolean createTable(String tableName, List<String> columns, List<String> columnsTypes) throws Exception{
         // create table
-        String sql = sqlUtils.createTable(tableName, columns, columnsTypes);
-        jdbcTemplate.execute(sql);
-        return true;
+        try{
+            String sql = sqlUtils.createTable(tableName, columns, columnsTypes);
+            jdbcTemplate.execute(sql);
+            return true;
+        }catch (Exception e){
+            throw e;
+        }
     }
 
     public List<Map<String, Object>> queryOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){

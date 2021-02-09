@@ -10,8 +10,8 @@ public interface TableService {
         put("A股基本资料", "wind_AShareDescription_test");
     }};
 
-    Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns);
-    Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> dbColumns, List<String> userColumns);
-    Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr);
-    Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr);
+    Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns) throws Exception;
+    Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> userColumns) throws Exception;
+    Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) throws Exception;
+    Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr) throws Exception;
 }

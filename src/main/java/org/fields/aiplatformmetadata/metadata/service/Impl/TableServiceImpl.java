@@ -7,6 +7,7 @@ import org.fields.aiplatformmetadata.metadata.service.DataService;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -46,7 +47,7 @@ public class TableServiceImpl implements TableService {
     }
 
     @Override
-    public Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> dbColumns, List<String> userColumns) {
+    public Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> userColumns) throws Exception{
         if (!metadataService.isTableExisting(oldTableName)) {
             log.info("createTable error: old table {} is not existing", oldTableName);
             throw new ApiException("createTable error: old table is not existing");
@@ -57,9 +58,11 @@ public class TableServiceImpl implements TableService {
         }
         String functionName = metadataService.getFunctionName(oldTableName);
         List<String> types = new ArrayList<>();
+        List<String> dbColumns = new ArrayList<>();
         for (String windColumn : windColumns) {
             String type = metadataService.getType(oldTableName, windColumn);
             types.add(type);
+            dbColumns.add(metadataService.windColumn2DbColumn(oldTableName, windColumn));
         }
         List<Map<String, String>> metadataDetails = new ArrayList<>();
         int len = windColumns.size();
@@ -74,25 +77,31 @@ public class TableServiceImpl implements TableService {
                 put("type", type);
             }});
         }
-        boolean ret = utils.createTable(newTableName, dbColumns, types);
-        ret = ret && metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
-        ret = ret && metadataService.insertTableMetadataDetail(metadataDetails);
-        ret = ret && synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
-
-        return ret;
-    }
-
-    @Override
-    public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) {
-        Boolean status = true;
-        for(String windCode: windCodes){
-            status = status && synchronizeCode(oldTableName, newTableName, windCode, startStr, endStr);
+        try{
+            utils.createTable(newTableName, dbColumns, types);
+            metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
+            metadataService.insertTableMetadataDetail(metadataDetails);
+            synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
+            return true;
+        }catch (Exception e){
+            throw e;
         }
-        return status;
     }
 
     @Override
-    public Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr) {
+    public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) throws Exception{
+        try{
+            for(String windCode: windCodes){
+                synchronizeCode(oldTableName, newTableName, windCode, startStr, endStr);
+            }
+            return true;
+        }catch (Exception e){
+            throw e;
+        }
+    }
+
+    @Override
+    public Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr) throws Exception{
         try{
             Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
             Calendar c = Calendar.getInstance();
@@ -146,6 +155,18 @@ public class TableServiceImpl implements TableService {
                         //String value = "12.34";
                         values.add(value);
                     }
+                    // remove None value index
+                    List<Integer> index = new ArrayList<>();
+                    int len = emptyColumn.size();
+                    for(int i = 0; i < len; ++i){
+                        if(values.get(i).equals("None")){
+                            index.add(i);
+                        }
+                    }
+                    for(int i: index){
+                        emptyColumn.remove(i);
+                        values.remove(i);
+                    }
                     if(emptyColumn.size() > 0){
                         utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
                         utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
@@ -182,6 +203,18 @@ public class TableServiceImpl implements TableService {
                             assert value != null;
                             values.add(value);
                         }
+                        // remove None value index
+                        List<Integer> index = new ArrayList<>();
+                        int len = windColumns.size();
+                        for(int i = 0; i < len; ++i){
+                            if(values.get(i).equals("None")){
+                                index.add(i);
+                            }
+                        }
+                        for(int i: index){
+                            windColumns.remove(i);
+                            values.remove(i);
+                        }
                         status = status && utils.updateOneLine(newTableName, windCode, dateStr, windColumns, values);
                         status = status && utils.updateOneLine(oldTableName, windCode, dateStr, windColumns, values);
                     }
@@ -191,8 +224,7 @@ public class TableServiceImpl implements TableService {
             }
             return status;
         }catch (Exception e){
-            e.printStackTrace();
+            throw e;
         }
-        return false;
     }
 }

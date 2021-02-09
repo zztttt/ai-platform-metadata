@@ -1,6 +1,7 @@
 package org.fields.aiplatformmetadata.metadata;
 
 import com.baomidou.mybatisplus.extension.exceptions.ApiException;
+import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -36,7 +37,7 @@ public class SqlUtils {
      * create table
      * @return sql
      */
-    public String createTable(String tableName, List<String> columns, List<String> columnTypes){
+    public String createTable(String tableName, List<String> columns, List<String> columnTypes) throws Exception{
         if(isTableExisting(tableName)){
             log.info("table: {} is already existing", tableName);
             throw new ApiException("table is already existing");
