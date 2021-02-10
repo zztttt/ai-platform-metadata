@@ -7,7 +7,6 @@ import org.fields.aiplatformmetadata.metadata.service.DataService;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -90,141 +89,249 @@ public class TableServiceImpl implements TableService {
 
     @Override
     public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) throws Exception{
-        try{
+        if(oldTableName.equals("wind_AShareEODPrices_test") || oldTableName.equals("wind_CCommodity_test")){
             for(String windCode: windCodes){
-                synchronizeCode(oldTableName, newTableName, windCode, startStr, endStr);
+                synchronizeCodeWithTime(oldTableName, newTableName, windCode, startStr, endStr);
             }
             return true;
-        }catch (Exception e){
-            throw e;
+        }else if(oldTableName.equals("wind_AShareDescription_test")){
+            for(String windCode: windCodes){
+                synchronizeCodeWithoutTime(oldTableName, newTableName, windCode, endStr);
+            }
+            return true;
+        }else{
+            throw new ApiException("invalid old table name");
         }
     }
 
     @Override
-    public Boolean synchronizeCode(String oldTableName, String newTableName, String windCode, String startStr, String endStr) throws Exception{
-        try{
-            Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
-            Calendar c = Calendar.getInstance();
-            c.setTime(endDate);
-            c.add(Calendar.DATE, 1);
-            endDate = c.getTime();
-            c.clear();
-            Boolean status = true;
-            // 有该天的数据，但不全，需要从wind拿
-            // <date, [columns] > >
-            //Map<String, List<String>> emptyCell = new HashMap<>();
-            for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
-                log.info("synchronize windCode: {}", windCode);
-                String dateStr = simpleDateFormat.format(cur);
-                // cache里有数据，优先从cache中拿
-                if(dataService.isLineExisting(oldTableName, windCode, dateStr)){
-                    log.info("cache hit");
-                    List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode, dateStr);
-                    if(result.size() > 1){
-                        log.info("more than one line data");
-                        throw new ApiException("more than one line data");
-                    }
-                    Map<String, Object> map = result.get(0);
-                    List<String> emptyColumn = new ArrayList<>();
-                    // windColumn - value
-                    List<String> nonEmptyColumn = new ArrayList<>();
-                    List<Object> oldValues = new ArrayList<>();
-                    for(Map.Entry<String, Object> entry: map.entrySet()){
-                        if(entry.getKey().equals("id"))
-                            continue;
-                        //log.info("pair: {}", entry);
-                        String windColumn = metadataService.dbColumn2windColumn(oldTableName, entry.getKey());
-                        if(metadataService.isColumnExist(newTableName, windColumn)){
-                            if(entry.getValue() == null){
-                                emptyColumn.add(windColumn);
-                            }else{
-                                nonEmptyColumn.add(windColumn);
-                                oldValues.add(entry.getValue());
-                            }
+    public Boolean synchronizeCodeWithTime(String oldTableName, String newTableName, String windCode, String startStr, String endStr) throws Exception{
+        Date startDate = simpleDateFormat.parse(startStr), endDate = simpleDateFormat.parse(endStr);
+        Calendar c = Calendar.getInstance();
+        c.setTime(endDate);
+        c.add(Calendar.DATE, 1);
+        endDate = c.getTime();
+        c.clear();
+        Boolean status = true;
+        // 有该天的数据，但不全，需要从wind拿
+        // <date, [columns] > >
+        //Map<String, List<String>> emptyCell = new HashMap<>();
+        for(Date cur = startDate; !cur.equals(endDate); cur = c.getTime()){
+            log.info("synchronize windCode: {}", windCode);
+            String dateStr = simpleDateFormat.format(cur);
+            // cache里有数据，优先从cache中拿
+            if(dataService.isLineExisting(oldTableName, windCode, dateStr)){
+                log.info("cache hit");
+                List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode, dateStr);
+                if(result.size() > 1){
+                    log.info("more than one line data");
+                    throw new ApiException("more than one line data");
+                }
+                Map<String, Object> map = result.get(0);
+                List<String> emptyColumn = new ArrayList<>();
+                // windColumn - value
+                List<String> nonEmptyColumn = new ArrayList<>();
+                List<Object> oldValues = new ArrayList<>();
+                for(Map.Entry<String, Object> entry: map.entrySet()){
+                    if(entry.getKey().equals("id"))
+                        continue;
+                    //log.info("pair: {}", entry);
+                    String windColumn = metadataService.dbColumn2windColumn(oldTableName, entry.getKey());
+                    if(metadataService.isColumnExist(newTableName, windColumn)){
+                        if(entry.getValue() == null){
+                            emptyColumn.add(windColumn);
+                        }else{
+                            nonEmptyColumn.add(windColumn);
+                            oldValues.add(entry.getValue());
                         }
                     }
-                    // pull old data from cache, s_info_code 和 trade_dt 这两列当主键来用的
+                }
+                // pull old data from cache, s_info_code 和 trade_dt 这两列当主键来用的
+                status = status && utils.insertOneLine(newTableName, windCode, dateStr);
+                status = status &&  utils.updateOneLine(newTableName, windCode, dateStr, nonEmptyColumn, oldValues);
+                // pull new data
+                List<Object> values = new ArrayList<>();
+                for(String windColumn: emptyColumn){
+                    String[] args = new String[3];
+                    args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
+                    String value = utils.callScript(args);
+                    //String value = "12.34";
+                    values.add(value);
+                }
+                // remove None value index
+                List<Integer> index = new ArrayList<>();
+                int len = emptyColumn.size();
+                for(int i = 0; i < len; ++i){
+                    if(values.get(i).equals("None")){
+                        index.add(i);
+                    }
+                }
+                for(int i: index){
+                    emptyColumn.remove(i);
+                    values.remove(i);
+                }
+                if(emptyColumn.size() > 0){
+                    utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
+                    utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
+                }
+
+            }else{
+                // cache 里没数据，整天都要从wind拿
+                log.info("cache miss");
+                // 先查wind 如果有这么一天再进行更新
+                String[] args = new String[3];
+                args[0] = windCode; args[1] = dateStr; args[2] = "windcode";
+                String ret = utils.callScript(args);
+                //String ret = null;
+                if(ret == null){
+                    // 当天没有数据, skip
+                }else{
+                    // 当天有数据
+                    status = status && utils.insertOneLine(oldTableName, windCode, dateStr);
                     status = status && utils.insertOneLine(newTableName, windCode, dateStr);
-                    status = status &&  utils.updateOneLine(newTableName, windCode, dateStr, nonEmptyColumn, oldValues);
-                    // pull new data
+
+                    List<String> windColumns = metadataService.queryWindColumnsOfTable(newTableName);
                     List<Object> values = new ArrayList<>();
-                    for(String windColumn: emptyColumn){
-                        String[] args = new String[3];
-                        args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
-                        String value = utils.callScript(args);
-                        //String value = "12.34";
+                    for(String windColumn: windColumns){
+                        String[] arg = new String[3];
+                        arg[0]=windCode;arg[1]=dateStr;arg[2]=windColumn;
+                        String value = null;
+                        if(windColumn.equals("windcode")){
+                            value = windCode;
+                        }else if (windColumn.equals("lastradeday_s")){
+                            value = dateStr;
+                        }else{
+                            value = utils.callScript(arg);
+                        }
+                        assert value != null;
                         values.add(value);
                     }
                     // remove None value index
                     List<Integer> index = new ArrayList<>();
-                    int len = emptyColumn.size();
+                    int len = windColumns.size();
                     for(int i = 0; i < len; ++i){
                         if(values.get(i).equals("None")){
                             index.add(i);
                         }
                     }
                     for(int i: index){
-                        emptyColumn.remove(i);
+                        windColumns.remove(i);
                         values.remove(i);
                     }
-                    if(emptyColumn.size() > 0){
-                        utils.updateOneLine(newTableName, windCode, dateStr, emptyColumn, values);
-                        utils.updateOneLine(oldTableName, windCode, dateStr, emptyColumn, values);
-                    }
+                    status = status && utils.updateOneLine(newTableName, windCode, dateStr, windColumns, values);
+                    status = status && utils.updateOneLine(oldTableName, windCode, dateStr, windColumns, values);
+                }
+            }
+            c.setTime(cur);
+            c.add(Calendar.DATE, 1);
+        }
+        return status;
+    }
 
-                }else{
-                    // cache 里没数据，整天都要从wind拿
-                    log.info("cache miss");
-                    // 先查wind 如果有这么一天再进行更新
-                    String[] args = new String[3];
-                    args[0] = windCode; args[1] = dateStr; args[2] = "windcode";
-                    String ret = utils.callScript(args);
-                    //String ret = null;
-                    if(ret == null){
-                        // 当天没有数据, skip
+    @Override
+    public Boolean synchronizeCodeWithoutTime(String oldTableName, String newTableName, String windCode, String dateStr) throws Exception {
+        log.info("synchronize windCode: {}", windCode);
+        Boolean status = true;
+        // cache里有数据，优先从cache中拿
+        if(dataService.isLineExisting(oldTableName, windCode)){
+            log.info("cache hit");
+            List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode);
+            if(result.size() > 1){
+                log.info("more than one line data");
+                throw new ApiException("more than one line data");
+            }
+            Map<String, Object> map = result.get(0);
+            List<String> emptyColumn = new ArrayList<>();
+            // windColumn - value
+            List<String> nonEmptyColumn = new ArrayList<>();
+            List<Object> oldValues = new ArrayList<>();
+            for(Map.Entry<String, Object> entry: map.entrySet()){
+                if(entry.getKey().equals("id"))
+                    continue;
+                //log.info("pair: {}", entry);
+                String windColumn = metadataService.dbColumn2windColumn(oldTableName, entry.getKey());
+                if(metadataService.isColumnExist(newTableName, windColumn)){
+                    if(entry.getValue() == null){
+                        emptyColumn.add(windColumn);
                     }else{
-                        // 当天有数据
-                        status = status && utils.insertOneLine(oldTableName, windCode, dateStr);
-                        status = status && utils.insertOneLine(newTableName, windCode, dateStr);
-
-                        List<String> windColumns = metadataService.queryWindColumnsOfTable(newTableName);
-                        List<Object> values = new ArrayList<>();
-                        for(String windColumn: windColumns){
-                            String[] arg = new String[3];
-                            arg[0]=windCode;arg[1]=dateStr;arg[2]=windColumn;
-                            String value = null;
-                            if(windColumn.equals("windcode")){
-                                value = windCode;
-                            }else if (windColumn.equals("lastradeday_s")){
-                                value = dateStr;
-                            }else{
-                                value = utils.callScript(arg);
-                            }
-                            assert value != null;
-                            values.add(value);
-                        }
-                        // remove None value index
-                        List<Integer> index = new ArrayList<>();
-                        int len = windColumns.size();
-                        for(int i = 0; i < len; ++i){
-                            if(values.get(i).equals("None")){
-                                index.add(i);
-                            }
-                        }
-                        for(int i: index){
-                            windColumns.remove(i);
-                            values.remove(i);
-                        }
-                        status = status && utils.updateOneLine(newTableName, windCode, dateStr, windColumns, values);
-                        status = status && utils.updateOneLine(oldTableName, windCode, dateStr, windColumns, values);
+                        nonEmptyColumn.add(windColumn);
+                        oldValues.add(entry.getValue());
                     }
                 }
-                c.setTime(cur);
-                c.add(Calendar.DATE, 1);
             }
-            return status;
-        }catch (Exception e){
-            throw e;
+            // pull old data from cache, s_info_code 这一列当主键来用的
+            status = status && utils.insertOneLine(newTableName, windCode);
+            status = status &&  utils.updateOneLine(newTableName, windCode, nonEmptyColumn, oldValues);
+            // pull new data
+            List<Object> values = new ArrayList<>();
+            for(String windColumn: emptyColumn){
+                String[] args = new String[3];
+                args[0]=windCode;args[1]="20190603";args[2]=windColumn;
+                String value = utils.callScript(args);
+                //String value = "12.34";
+                values.add(value);
+            }
+            // remove None value index
+            List<Integer> index = new ArrayList<>();
+            int len = emptyColumn.size();
+            for(int i = 0; i < len; ++i){
+                if(values.get(i).equals("None")){
+                    index.add(i);
+                }
+            }
+            for(int i: index){
+                emptyColumn.remove(i);
+                values.remove(i);
+            }
+            if(emptyColumn.size() > 0){
+                utils.updateOneLine(newTableName, windCode, emptyColumn, values);
+                utils.updateOneLine(oldTableName, windCode, emptyColumn, values);
+            }
+        }else{
+            //cache里没数据，从wind拿
+            log.info("cache miss");
+            // 先查wind 如果有这么一天再进行更新
+            String[] args = new String[3];
+            args[0] = windCode; args[1] = "20190603"; args[2] = "windcode";
+            String ret = utils.callScript(args);
+            //String ret = null;
+            if(ret == null){
+                // 当天没有数据, error. TODO
+                throw new ApiException("no data in date: 20190603");
+            }else{
+                // 当天有数据
+                status = status && utils.insertOneLine(oldTableName, windCode);
+                status = status && utils.insertOneLine(newTableName, windCode);
+
+                List<String> windColumns = metadataService.queryWindColumnsOfTable(newTableName);
+                List<Object> values = new ArrayList<>();
+                for(String windColumn: windColumns){
+                    String[] arg = new String[3];
+                    arg[0]=windCode;arg[1]="20190603";arg[2]=windColumn;
+                    String value = null;
+                    if(windColumn.equals("windcode")){
+                        value = windCode;
+                    }else{
+                        value = utils.callScript(arg);
+                    }
+                    values.add(value);
+                }
+                // remove None value index
+                List<Integer> index = new ArrayList<>();
+                int len = windColumns.size();
+                for(int i = 0; i < len; ++i){
+                    if(values.get(i).equals("None")){
+                        index.add(i);
+                    }
+                }
+                for(int i: index){
+                    windColumns.remove(i);
+                    values.remove(i);
+                }
+                status = status && utils.updateOneLine(newTableName, windCode, windColumns, values);
+                status = status && utils.updateOneLine(oldTableName, windCode, windColumns, values);
+            }
         }
+        return status;
     }
 }

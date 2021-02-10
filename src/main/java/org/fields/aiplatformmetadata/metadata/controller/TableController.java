@@ -80,6 +80,7 @@ public class TableController {
         JSONArray data = new JSONArray();
         data.add("wind_AShareEODPrices_test");
         data.add("wind_CCommodity_test");
+        data.add("wind_AShareDescription_test");
         return RespResult.success(data);
     }
 

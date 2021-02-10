@@ -95,6 +95,9 @@ public class MetadataServiceImpl implements MetadataService {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName).eq("windColumn", windColumn);
         MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        if(metadataDetail == null){
+            throw new ApiException("metadata getType null. windColumn: " + windColumn);
+        }
         return metadataDetail.getType();
     }
 

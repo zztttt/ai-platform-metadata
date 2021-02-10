@@ -26,11 +26,18 @@ public class SqlUtils {
         return false;
     }
 
+    // 带时间序列
     public String isLineExisting(String tableName, String windCodeColumn, String dateColumn, String windCode, String dateStr){
         StringBuilder sb = new StringBuilder();
         sb.append("select * from ").append(tableName).append(" where ")
                 .append(windCodeColumn).append("='").append(windCode).append("' and ")
                 .append(dateColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+    // 不带时间序列
+    public String isLineExisting(String tableName, String windCodeColumn, String windCode){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(tableName).append(" where ").append(windCodeColumn).append("='").append(windCode).append("'");
         return sb.toString();
     }
     /**
@@ -64,7 +71,7 @@ public class SqlUtils {
      * @param values
      * @return sql
      */
-    public String insertOneLine(String tableName, List<String> columns, List<String> values){
+    public String insertOneLine(String tableName, List<String> columns, List<String> values) throws Exception{
         if(columns.size() != values.size()){
             log.info("insertNewLine columns and types size don't match");
             throw new ApiException("insertNewLine columns and types size don't match");
@@ -87,13 +94,21 @@ public class SqlUtils {
         return sb.toString();
     }
 
+    // 带时间序列，新建一个空行
     public String insertOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr){
         StringBuilder sb = new StringBuilder();
         sb.append("insert into ").append(tableName).append("(").append(windCodeDbColumn).append(",").append(dateDbColumn)
                 .append(") value (").append("'").append(windCode).append("','").append(dateStr).append("')");
         return sb.toString();
     }
+    // 不带时间序列，新建一个空行
+    public String insertOneLine(String tableName, String windCodeDbColumn, String windCode){
+        StringBuilder sb = new StringBuilder();
+        sb.append("insert into ").append(tableName).append("(").append(windCodeDbColumn).append(") value (").append("'").append(windCode).append("')");
+        return sb.toString();
+    }
 
+    // 带时间序列
     public String updateOneLine(String tableName, String windCodeDbColumn, String dateDbColumn, String windCode, String dateStr, List<String> dbColumns, List<Object> values){
         StringBuilder sb = new StringBuilder();
         sb.append("update ").append(tableName).append(" set ");
@@ -105,6 +120,19 @@ public class SqlUtils {
         }
         sb.append(" where ").append(windCodeDbColumn).append("='").append(windCode).append("' and ")
                 .append(dateDbColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+    // 不带时间序列
+    public String updateOneLine(String tableName, String windCodeDbColumn, String windCode, List<String> dbColumns, List<Object> values) throws Exception{
+        StringBuilder sb = new StringBuilder();
+        sb.append("update ").append(tableName).append(" set ");
+        String link = "";
+        int len = dbColumns.size();
+        for(int i = 0; i < len; ++i){
+            sb.append(link).append(dbColumns.get(i)).append("='").append(values.get(i)).append("'");
+            link = ",";
+        }
+        sb.append(" where ").append(windCodeDbColumn).append("='").append(windCode).append("'");
         return sb.toString();
     }
 
@@ -122,6 +150,19 @@ public class SqlUtils {
         sb.append("select * from ").append(tableName).append(" where ")
                 .append(windCodeDbColumn).append("='").append(windCode).append("' and ")
                 .append(dateDbColumn).append("='").append(dateStr).append("'");
+        return sb.toString();
+    }
+
+    /**
+     * selct * from t1 where windCodeDbColumn = 'windCode'
+     * @param tableName
+     * @param windCodeDbColumn
+     * @param windCode
+     * @return
+     */
+    public String queryOneLine(String tableName, String windCodeDbColumn, String windCode){
+        StringBuilder sb = new StringBuilder();
+        sb.append("select * from ").append(tableName).append(" where ").append(windCodeDbColumn).append("='").append(windCode).append("'");
         return sb.toString();
     }
 

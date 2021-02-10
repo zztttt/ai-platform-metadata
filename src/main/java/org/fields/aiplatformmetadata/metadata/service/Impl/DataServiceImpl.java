@@ -19,16 +19,28 @@ public class DataServiceImpl implements DataService {
     Utils utils;
 
     @Override
-    public boolean isLineExisting(String tableName, String windCode, String dateStr) {
+    public boolean isLineExisting(String tableName, String windCode, String dateStr) throws Exception{
         String windCodeColumn = metadataService.getWindCodeForDbColumn(tableName);
         String dateDbColumn = metadataService.getTradeDtForDbColumn(tableName);
         return utils.isLineExisting(tableName, windCodeColumn, dateDbColumn, windCode, dateStr);
     }
 
     @Override
-    public List<Map<String, Object>> queryOneLineFromCache(String oldTableName, String windCode, String dateStr) {
+    public Boolean isLineExisting(String tableName, String windCode) throws Exception{
+        String windCodeColumn = metadataService.getWindCodeForDbColumn(tableName);
+        return utils.isLineExisting(tableName, windCodeColumn, windCode);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryOneLineFromCache(String oldTableName, String windCode, String dateStr) throws Exception{
         String windCodeDbColumn = metadataService.getWindCodeForDbColumn(oldTableName);
         String dateDbColumn = metadataService.getTradeDtForDbColumn(oldTableName);
         return utils.queryOneLine(oldTableName, windCodeDbColumn, dateDbColumn, windCode, dateStr);
+    }
+
+    @Override
+    public List<Map<String, Object>> queryOneLineFromCache(String oldTableName, String windCode) throws Exception{
+        String windCodeDbColumn = metadataService.getWindCodeForDbColumn(oldTableName);
+        return utils.queryOneLine(oldTableName, windCodeDbColumn, windCode);
     }
 }
