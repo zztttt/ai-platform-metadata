@@ -47,6 +47,27 @@ public class TableController {
     @PostMapping("/create")
     public RespResult create(@RequestBody CreateTable createTable){
         log.info("receive: {}", createTable);
+        if(createTable.getOldTableName() == null){
+            return RespResult.fail(500L, "oldTableName is null");
+        }
+        if(createTable.getNewTableName() == null){
+            return RespResult.fail(500L, "newTableName is null");
+        }
+        if(createTable.getUpdateTime() == null){
+            return RespResult.fail(500L,"updateTime is null");
+        }
+        if(createTable.getUpdateUser() == null){
+            return RespResult.fail(500L,"updateUser is null");
+        }
+        if(createTable.getTimeRange() == null){
+            return RespResult.fail(500L,"time range is null");
+        }
+        if(createTable.getWindCodes() == null){
+            return RespResult.fail(500L,"windCodes is null");
+        }
+        if(createTable.getColumns() == null){
+            return RespResult.fail(500L,"columns is null");
+        }
         List<Column> columns = createTable.getColumns();
         List<String> windColumns = new ArrayList<>();
         //List<String> dbColumns = new ArrayList<>();
@@ -88,6 +109,9 @@ public class TableController {
     public RespResult getWindTableDetails(@RequestBody GetWindTableDetails getWindTableDetails){
         log.info("getWindTableDetails: {}", getWindTableDetails);
         String windTableName = getWindTableDetails.getWindTableName();
+        if(windTableName == null){
+            return RespResult.fail(500L, "windTableName is null");
+        }
         JSONArray ret = metadataService.getWindTableDetails(windTableName);
         return RespResult.success(ret);
     }
