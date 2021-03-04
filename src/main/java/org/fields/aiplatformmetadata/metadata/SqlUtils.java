@@ -71,7 +71,7 @@ public class SqlUtils {
      * @param values
      * @return sql
      */
-    public String insertOneLine(String tableName, List<String> columns, List<String> values) throws Exception{
+    public String insertOneLine(String tableName, List<String> columns, List<Object> values) throws Exception{
         if(columns.size() != values.size()){
             log.info("insertNewLine columns and types size don't match");
             throw new ApiException("insertNewLine columns and types size don't match");

@@ -1,7 +1,10 @@
+#-*- coding: UTF-8 -*-
 import sys
 from datetime import datetime, timedelta
 import MySQLdb
 import traceback
+import chardet
+import json
 
 #if debug:
 from WindPy import *
@@ -13,7 +16,7 @@ password = "Zzt19980924x"
 db = MySQLdb.connect(url, user, password, "wind", charset='utf8' )
 cursor = db.cursor()
 
-# 000001.SZ 20190603 high
+    # 000001.SZ 20190603 high
 def wsd(code, date, wind_column):
     tmp = datetime.strptime(date, "%Y%m%d")
     date = datetime.strftime(tmp, "%Y-%m-%d")
@@ -24,7 +27,12 @@ def wsd(code, date, wind_column):
         print("no data in:", date)
         return
     item = response.Data[0][0]
-    print("data:", item)
+    if wind_column == 'ipo_date':
+        item_tmp = datetime.strptime(str(item), "%Y-%m-%d %H:%M:%S")
+        item = datetime.strftime(item_tmp, "%Y%m%d")
+    data = {"data": item}
+    data_str = json.dumps(data)
+    print(data_str)
     return item # float
 
 if __name__ == '__main__':

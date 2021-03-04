@@ -79,6 +79,10 @@ public class MetadataServiceImpl implements MetadataService {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName).eq("windColumn", "windcode");
         MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        if(metadataDetail == null){
+            log.error("metadatadetail windcode is null. tableName:{}", tableName);
+            throw new ApiException("metadatadetail windcode is null. tableName:" + tableName);
+        }
         return metadataDetail.getDbColumn();
     }
 
@@ -87,6 +91,10 @@ public class MetadataServiceImpl implements MetadataService {
         QueryWrapper<MetadataDetail> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("tableName", tableName).eq("windColumn", "lastradeday_s");
         MetadataDetail metadataDetail = metadataDetailMapper.selectOne(queryWrapper);
+        if(metadataDetail == null){
+            log.error("metadatadetail lastradeday_s is null. tableName:{}", tableName);
+            throw new ApiException("metadatadetail lastradeday_s is null. tableName:" + tableName);
+        }
         return metadataDetail.getDbColumn();
     }
 
@@ -202,7 +210,7 @@ public class MetadataServiceImpl implements MetadataService {
                     .eq("windColumn", windColumn);
         if(metadataDetailMapper.selectOne(queryWrapper) != null){
             log.info("insertTableMetadataOneDetail error. {} {} is already exists", tableName, windColumn);
-            throw new ApiException("insertTableMetadataOneDetail error");
+            throw new ApiException("insertTableMetadataOneDetail error. windColumn is already existing.");
         }
         int ret = metadataDetailMapper.insert(metadataDetail);
         return ret == 1;

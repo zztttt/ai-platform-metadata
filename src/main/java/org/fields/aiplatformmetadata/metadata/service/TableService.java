@@ -12,7 +12,8 @@ public interface TableService {
 
     Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns) throws Exception;
     Boolean createTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> userColumns) throws Exception;
-    Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) throws Exception;
+    Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, List<String> userColumns, String startStr, String endStr) throws Exception;
     Boolean synchronizeCodeWithTime(String oldTableName, String newTableName, String windCode, String startStr, String endStr) throws Exception;
     Boolean synchronizeCodeWithoutTime(String oldTableName, String newTableName, String windCode, String endStr) throws Exception;
+    Boolean synchronizeEdbCode(String oldTableName, String newTableName, String windCode, String description,  String startStr, String endStr) throws Exception;
 }

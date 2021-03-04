@@ -1,6 +1,9 @@
 package org.fields.aiplatformmetadata.metadata.service.Impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import lombok.extern.slf4j.Slf4j;
+import org.fields.aiplatformmetadata.common.Constant;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
@@ -37,7 +40,7 @@ public class TableServiceImpl implements TableService {
         }
         Boolean status = true;
         try {
-            status = status && synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
+            status = status && synchronizeCodes(oldTableName, newTableName, windCodes, null, startStr, endStr);
         }catch (ApiException e){
             throw e;
         }finally {
@@ -58,37 +61,72 @@ public class TableServiceImpl implements TableService {
         String functionName = metadataService.getFunctionName(oldTableName);
         List<String> types = new ArrayList<>();
         List<String> dbColumns = new ArrayList<>();
-        for (String windColumn : windColumns) {
-            String type = metadataService.getType(oldTableName, windColumn);
-            types.add(type);
-            dbColumns.add(metadataService.windColumn2DbColumn(oldTableName, windColumn));
-        }
         List<Map<String, String>> metadataDetails = new ArrayList<>();
-        int len = windColumns.size();
-        for (int i = 0; i < len; ++i) {
-            String userColumn = userColumns.get(i), windColumn = windColumns.get(i), dbColumn = dbColumns.get(i), type = types.get(i);
-            // add the metadataDetail
-            metadataDetails.add(new HashMap<String, String>() {{
+        if(functionName.equals("wsd")){
+            for (String windColumn : windColumns) {
+                String type = metadataService.getType(oldTableName, windColumn);
+                types.add(type);
+                dbColumns.add(metadataService.windColumn2DbColumn(oldTableName, windColumn));
+            }
+            int len = windColumns.size();
+            for (int i = 0; i < len; ++i) {
+                String userColumn = userColumns.get(i), windColumn = windColumns.get(i), dbColumn = dbColumns.get(i), type = types.get(i);
+                // add the metadataDetail
+                metadataDetails.add(new HashMap<String, String>() {{
+                    put("tableName", newTableName);
+                    put("windColumn", windColumn);
+                    put("dbColumn", dbColumn);
+                    put("userColumn", userColumn);
+                    put("type", type);
+                }});
+            }
+        }else if(functionName.equals("edb")){
+            dbColumns.add("s_info_windcode");dbColumns.add("trade_dt");dbColumns.add("data");dbColumns.add("description");
+            types.add("varchar(40)");types.add("varchar(8)");types.add("float(20,4)");types.add("varchar(100)");
+            metadataDetails.add(new HashMap<String, String>(){{
                 put("tableName", newTableName);
-                put("windColumn", windColumn);
-                put("dbColumn", dbColumn);
-                put("userColumn", userColumn);
-                put("type", type);
+                put("windColumn", "windcode");
+                put("dbColumn", "s_info_windcode");
+                put("userColumn", "wind代码");
+                put("type", "varchar(40)");
+            }});
+            metadataDetails.add(new HashMap<String, String>(){{
+                put("tableName", newTableName);
+                put("windColumn", "lastradeday_s");
+                put("dbColumn", "trade_dt");
+                put("userColumn", "日期");
+                put("type", "varchar(8)");
+            }});
+            metadataDetails.add(new HashMap<String, String>(){{
+                put("tableName", newTableName);
+                put("windColumn", "data");
+                put("dbColumn", "data");
+                put("userColumn", "数据");
+                put("type", "float(20,4)");
+            }});
+            metadataDetails.add(new HashMap<String, String>(){{
+                put("tableName", newTableName);
+                put("windColumn", "description");
+                put("dbColumn", "description");
+                put("userColumn", "数据描述");
+                put("type", "varchar(100)");
             }});
         }
+
         try{
             utils.createTable(newTableName, dbColumns, types);
             metadataService.insertTableMetadata(newTableName, functionName, updateTime, updateUser);
             metadataService.insertTableMetadataDetail(metadataDetails);
-            synchronizeCodes(oldTableName, newTableName, windCodes, startStr, endStr);
+            synchronizeCodes(oldTableName, newTableName, windCodes, userColumns, startStr, endStr);
             return true;
         }catch (Exception e){
             throw e;
         }
     }
 
+
     @Override
-    public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, String startStr, String endStr) throws Exception{
+    public Boolean synchronizeCodes(String oldTableName, String newTableName, List<String> windCodes, List<String> userColumns, String startStr, String endStr) throws Exception{
         if(oldTableName.equals("wind_AShareEODPrices_test") || oldTableName.equals("wind_CCommodity_test")){
             for(String windCode: windCodes){
                 synchronizeCodeWithTime(oldTableName, newTableName, windCode, startStr, endStr);
@@ -99,9 +137,52 @@ public class TableServiceImpl implements TableService {
                 synchronizeCodeWithoutTime(oldTableName, newTableName, windCode, endStr);
             }
             return true;
-        }else{
+        }else if(oldTableName.equals("wind_GlobalMacrography_test")){
+            if(windCodes.size() != userColumns.size()){
+                log.info("edb param size mismatch");
+                throw new ApiException("edb param size mismatch. windCodes is " + windCodes.size() + "userColumns is " + userColumns.size());
+            }
+            int len = windCodes.size();
+            for(int i = 0; i < len; ++i){
+                synchronizeEdbCode(oldTableName, newTableName, windCodes.get(i), userColumns.get(i), startStr, endStr);
+            }
+            return true;
+        }
+        else{
             throw new ApiException("invalid old table name");
         }
+    }
+
+    @Override
+    public Boolean synchronizeEdbCode(String oldTableName, String newTableName, String windCode, String description,  String startStr, String endStr) throws Exception{
+        log.info("synchronizeEdbCode: {}", windCode);
+        String[] args = new String[3];
+        args[0] = windCode;args[1] = startStr;args[2] = endStr;
+        String value = utils.callScript(Constant.edbPath, args);
+        JSONObject jsonObject = JSONObject.parseObject(value);
+        JSONArray datas = (JSONArray) jsonObject.get("data"), dates = (JSONArray) jsonObject.get("date");
+        if(datas == null || dates == null){
+            log.info("datas or dates is null");
+            throw new ApiException("datas or dates is null");
+        }
+        if(datas.size() != dates.size()){
+            log.info("datas and dates size mismatch");
+            throw new ApiException("datas and dates size mismatch");
+        }
+        int len = datas.size();
+        for(int i = 0; i < len; ++i){
+            Object data = datas.get(i);
+            String date = (String) dates.get(i);
+            // update old table
+            List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode, (String) date);
+            // cache miss, update date in old table
+            if(result.size() == 0){
+                utils.insertOneLine(oldTableName, windCode, date, data, description);
+            }
+            // update new table
+            utils.insertOneLine(newTableName, windCode, date, data, description);
+        }
+        return true;
     }
 
     @Override
@@ -154,7 +235,7 @@ public class TableServiceImpl implements TableService {
                 for(String windColumn: emptyColumn){
                     String[] args = new String[3];
                     args[0]=windCode;args[1]=dateStr;args[2]=windColumn;
-                    String value = utils.callScript(args);
+                    String value = utils.callScript(Constant.wsdPath, args);
                     //String value = "12.34";
                     values.add(value);
                 }
@@ -181,7 +262,7 @@ public class TableServiceImpl implements TableService {
                 // 先查wind 如果有这么一天再进行更新
                 String[] args = new String[3];
                 args[0] = windCode; args[1] = dateStr; args[2] = "windcode";
-                String ret = utils.callScript(args);
+                String ret = utils.callScript(Constant.wsdPath, args);
                 //String ret = null;
                 if(ret == null){
                     // 当天没有数据, skip
@@ -201,7 +282,7 @@ public class TableServiceImpl implements TableService {
                         }else if (windColumn.equals("lastradeday_s")){
                             value = dateStr;
                         }else{
-                            value = utils.callScript(arg);
+                            value = utils.callScript(Constant.wsdPath, arg);
                         }
                         assert value != null;
                         values.add(value);
@@ -267,7 +348,7 @@ public class TableServiceImpl implements TableService {
             for(String windColumn: emptyColumn){
                 String[] args = new String[3];
                 args[0]=windCode;args[1]="20190603";args[2]=windColumn;
-                String value = utils.callScript(args);
+                String value = utils.callScript(Constant.wsdPath, args);
                 //String value = "12.34";
                 values.add(value);
             }
@@ -293,7 +374,7 @@ public class TableServiceImpl implements TableService {
             // 先查wind 如果有这么一天再进行更新
             String[] args = new String[3];
             args[0] = windCode; args[1] = "20190603"; args[2] = "windcode";
-            String ret = utils.callScript(args);
+            String ret = utils.callScript(Constant.wsdPath, args);
             //String ret = null;
             if(ret == null){
                 // 当天没有数据, error. TODO
@@ -312,7 +393,7 @@ public class TableServiceImpl implements TableService {
                     if(windColumn.equals("windcode")){
                         value = windCode;
                     }else{
-                        value = utils.callScript(arg);
+                        value = utils.callScript(Constant.wsdPath, arg);
                     }
                     values.add(value);
                 }

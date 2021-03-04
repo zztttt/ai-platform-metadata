@@ -6,14 +6,11 @@ import org.fields.aiplatformmetadata.common.Constant;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -99,6 +96,26 @@ public class Utils {
         return ret == 1;
     }
 
+    public Boolean insertOneLine(String tableName, String windCode, String dateStr, Object value, String description) throws Exception{
+        String windCodeDbColumn = metadataService.getWindCodeForDbColumn(tableName);
+        String dateDbColumn = metadataService.getTradeDtForDbColumn(tableName);
+        List<String> columns = new ArrayList<String>(){{
+            add(windCodeDbColumn);
+            add(dateDbColumn);
+            add("data");
+            add("description");
+        }};
+        List<Object> values = new ArrayList<Object>(){{
+            add(windCode);
+            add(dateStr);
+            add(value);
+            add(description);
+        }};
+        String sql = sqlUtils.insertOneLine(tableName, columns, values);
+        int ret = jdbcTemplate.update(sql);
+        return ret == 1;
+    }
+
     // 带时间序列
     public Boolean updateOneLine(String tableName, String windCode, String dateStr, List<String> windColumns, List<Object> values) throws Exception{
         String windCodeDbColumn = metadataService.getWindCodeForDbColumn(tableName);
@@ -123,9 +140,9 @@ public class Utils {
         return ret == 1;
     }
 
-    public String callScript(String[] args) throws Exception{
+    public String callScript(String scriptPath, String[] args) throws Exception{
         String ret = null;
-        ProcessBuilder pb = new ProcessBuilder().command("python", "-u", Constant.scriptPath, args[0], args[1], args[2]);
+        ProcessBuilder pb = new ProcessBuilder().command("python", "-u", scriptPath, args[0], args[1], args[2]);
         Process p = pb.start();
 
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -135,13 +152,20 @@ public class Utils {
                 continue;
             if(line.charAt(0) == '{'){
                 JSONObject jsonObject = JSONObject.parseObject(line);
-                String data = String.valueOf(jsonObject.get("data"));
-                //log.info("json data:{}", data);
-                ret = data;
+                if(scriptPath.equals(Constant.wsdPath)){
+                    String data = String.valueOf(jsonObject.get("data"));
+                    //log.info("json data:{}", data);
+                    ret = data;
+                }else if(scriptPath.equals(Constant.edbPath)){
+                    ret = jsonObject.toJSONString();
+                }else{
+                    log.info("invalid scrip path");
+                    throw new ApiException("invalid scrip path");
+                }
             }
         }
         long result = p.waitFor();
-        System.out.println("Process exit with:" + result);
+        log.info("script process exit with: {}", result);
         if(result != 0){
             throw new ApiException("script execute fail. args:" +  args[0] + ", " +  args[1] + ", " +  args[2]);
         }

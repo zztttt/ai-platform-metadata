@@ -113,12 +113,19 @@ public class TableController {
             return RespResult.fail(500L, "windTableName is null");
         }
         JSONArray ret = metadataService.getWindTableDetails(windTableName);
+        log.info(ret.toString());
         return RespResult.success(ret);
     }
 
     @PostMapping("/update")
     public RespResult update(@RequestBody UpdateTable updateTable){
         log.info("update: {}", updateTable);
+        if(updateTable.getOldTableName() == null){
+            return RespResult.fail(500L, "oldTableName is null");
+        }
+        if(updateTable.getNewTableName() == null){
+            return RespResult.fail(500L, "newTableName is null");
+        }
         List<UpdateColumn> updateColumns = updateTable.getColumns();
         List<String> windColumns = new ArrayList<>();
         for(UpdateColumn updateColumn: updateColumns){
