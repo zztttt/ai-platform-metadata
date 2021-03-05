@@ -95,13 +95,23 @@ public class TableController {
 
     }
 
-    @GetMapping("/getWindTableName")
-    public RespResult getWindTableName(){
-        log.info("getWindTableName");
+    @PostMapping("/getWindTableName")
+    public RespResult getWindTableName(@RequestBody GetWindTableName getWindTableName){
+        log.info("getWindTableName: {}", getWindTableName);
+        if(getWindTableName.getWindDes() == null){
+            return RespResult.fail(500L, "getWindTableName para missing");
+        }
+        String windDes = getWindTableName.getWindDes();
         JSONArray data = new JSONArray();
-        data.add("wind_AShareEODPrices_test");
-        data.add("wind_CCommodity_test");
-        data.add("wind_AShareDescription_test");
+        if(windDes.equals("wsd")){
+            data.add("wind_AShareEODPrices_test");
+            data.add("wind_CCommodity_test");
+            data.add("wind_AShareDescription_test");
+        }else if(windDes.equals("edb")){
+            data.add("wind_GlobalMacrography_test");
+        }else{
+            return RespResult.fail(500L, "windDes error." + windDes);
+        }
         return RespResult.success(data);
     }
 

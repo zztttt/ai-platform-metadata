@@ -162,16 +162,16 @@ public class TableServiceImpl implements TableService {
         JSONObject jsonObject = JSONObject.parseObject(value);
         JSONArray datas = (JSONArray) jsonObject.get("data"), dates = (JSONArray) jsonObject.get("date");
         if(datas == null || dates == null){
-            log.info("datas or dates is null");
+            log.error("datas or dates is null");
             throw new ApiException("datas or dates is null");
         }
         if(datas.size() != dates.size()){
-            log.info("datas and dates size mismatch");
+            log.error("datas and dates size mismatch");
             throw new ApiException("datas and dates size mismatch");
         }
         int len = datas.size();
         for(int i = 0; i < len; ++i){
-            Object data = datas.get(i);
+            Object data = datas.get(i) ;
             String date = (String) dates.get(i);
             // update old table
             List<Map<String, Object>> result = dataService.queryOneLineFromCache(oldTableName, windCode, (String) date);
