@@ -15,4 +15,8 @@ public class Task {
     private String tableName;
     @TableField("description")
     private String description;
+    @TableField("parameter")
+    private String parameter;
+    @TableField("status")
+    private String status;
 }

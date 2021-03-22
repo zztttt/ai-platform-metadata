@@ -9,7 +9,9 @@ import org.fields.aiplatformmetadata.metadata.Utils;
 import org.fields.aiplatformmetadata.metadata.service.DataService;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
+import org.fields.aiplatformmetadata.metadata.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
@@ -23,13 +25,15 @@ public class TableServiceImpl implements TableService {
     @Autowired
     DataService dataService;
     @Autowired
+    TaskService taskService;
+    @Autowired
     Utils utils;
 
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 
 
     @Override
-    public Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns) throws ApiException {
+    public Boolean updateTable(String oldTableName, String newTableName, String updateTime, String updateUser, String startStr, String endStr, List<String> windCodes, List<String> windColumns, List<String> userColumns) throws Exception {
         if (!metadataService.isTableExisting(oldTableName)) {
             log.info("updateTable error: old table {} is not existing", oldTableName);
             throw new ApiException("createTable error: old table is not existing");
@@ -38,14 +42,27 @@ public class TableServiceImpl implements TableService {
             log.info("updateTable error: new table {} is not existing", newTableName);
             throw new ApiException("createTable error: new Table is already existing");
         }
-        Boolean status = true;
-        try {
-            status = status && synchronizeCodes(oldTableName, newTableName, windCodes, null, startStr, endStr);
-        }catch (ApiException e){
-            throw e;
-        }finally {
-            return status;
-        }
+        String functionName = metadataService.getFunctionName(oldTableName);
+            if(functionName.equals("wsd")){
+                synchronizeCodes(oldTableName, newTableName, windCodes, null, startStr, endStr);
+            }else if(functionName.equals("edb")){
+                int len = windCodes.size();
+                List<String> descriptions = new ArrayList<>();
+                for(int i = 0; i < len; ++i){
+                    descriptions.add(userColumns.get(i));
+                }
+                synchronizeCodes(oldTableName, newTableName, windCodes, descriptions, startStr, endStr);
+            }
+            return true;
+
+//        Boolean status = true;
+//        try {
+//            status = status && synchronizeCodes(oldTableName, newTableName, windCodes, null, startStr, endStr);
+//        }catch (ApiException e){
+//            throw e;
+//        }finally {
+//            return status;
+//        }
     }
 
     @Override
@@ -180,7 +197,10 @@ public class TableServiceImpl implements TableService {
                 utils.insertOneLine(oldTableName, windCode, date, data, description);
             }
             // update new table
-            utils.insertOneLine(newTableName, windCode, date, data, description);
+            result = dataService.queryOneLineFromCache(newTableName, windCode, date);
+            if(result.size() == 0){
+                utils.insertOneLine(newTableName, windCode, date, data, description);
+            }
         }
         return true;
     }

@@ -2,16 +2,20 @@ package org.fields.aiplatformmetadata.metadata.controller;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.fields.aiplatformmetadata.common.RespResult;
 import org.fields.aiplatformmetadata.exception.ApiException;
 import org.fields.aiplatformmetadata.metadata.entity.RequestDemo;
+import org.fields.aiplatformmetadata.metadata.entity.TaskInstance;
 import org.fields.aiplatformmetadata.metadata.entity.request.*;
 import org.fields.aiplatformmetadata.metadata.service.MetadataService;
 import org.fields.aiplatformmetadata.metadata.service.TableService;
 import org.fields.aiplatformmetadata.metadata.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,9 +23,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ScheduledFuture;
 
 @Slf4j
 @RestController
+@Component
 public class TableController {
     @Autowired
     MetadataService metadataService;
@@ -29,20 +36,12 @@ public class TableController {
     TableService tableService;
     @Autowired
     TaskService taskService;
-
-    @GetMapping("test")
-    public String test(){
-        return "test";
-    }
-    @PostMapping("/testpost")
-    public JSONObject create(@RequestBody RequestDemo requestDemo){
-        System.out.println(requestDemo);
-        List<String> list = requestDemo.getList();
-        for(String s: list){
-            System.out.println(s);
-        }
-        return null;
-    }
+    @Autowired
+    ThreadPoolTaskScheduler threadPoolTaskScheduler;
+    @Autowired
+    Map<Long, ScheduledFuture<?>> taskPool;
+    @Autowired
+    AutowireCapableBeanFactory autowireCapableBeanFactory;
 
     @PostMapping("/create")
     public RespResult create(@RequestBody CreateTable createTable){
@@ -88,8 +87,34 @@ public class TableController {
                     createTable.getWindCodes(),
                     windColumns,
                     userColumns);
-            return status? RespResult.success(""): RespResult.fail();
+            String type = createTable.getType();
+            if(type.equals("实时")){
+                String parameter = JSONObject.toJSONString(createTable);
+                TaskInstance taskInstance = new TaskInstance(parameter);
+                autowireCapableBeanFactory.autowireBean(taskInstance);
+                ScheduledFuture<?> future = threadPoolTaskScheduler.schedule(taskInstance, new CronTrigger("0 0 1 * * ?")); // 每天凌晨一点执行一次
+                status = status && taskService.insertNewTask(createTable.getUpdateUser(), createTable.getNewTableName(), "", parameter, "running");
+                Long id = taskService.queryTaskId(createTable.getNewTableName());
+                if(taskPool.containsKey(id)){
+                    log.error("taskPool has already contains key:{}", id);
+                }else{
+                    taskPool.put(id, future);
+                }
+                if(status){
+                    log.info("taskPool size increase. current running task count: {}. current added task id: {}", taskPool.size(), id);
+                    return status? RespResult.success(""): RespResult.fail(500L, "taskPool increase error");
+                }else{
+                    log.error("taskPool increase error.");
+                    return RespResult.fail(500L, "taskPool increase error");
+                }
+            }else if(type.equals("手动")){
+                return status? RespResult.success(""): RespResult.fail(500L, "task execute error");
+            }else{
+                return RespResult.fail(500L, "type is invalid.");
+            }
+
         } catch (Exception e){
+            log.error("create error. message: {}", e.getMessage());
             return RespResult.fail(500L, e.getMessage());
         }
 
@@ -138,8 +163,10 @@ public class TableController {
         }
         List<UpdateColumn> updateColumns = updateTable.getColumns();
         List<String> windColumns = new ArrayList<>();
+        List<String> userColumns = new ArrayList<>();
         for(UpdateColumn updateColumn: updateColumns){
             windColumns.add(updateColumn.getWindColumn());
+            userColumns.add(updateColumn.getUserColumn());
         }
         Boolean status = true;
         try {
@@ -151,7 +178,8 @@ public class TableController {
                     updateTable.getTimeRange().get(0),
                     updateTable.getTimeRange().get(1),
                     updateTable.getWindCodes(),
-                    windColumns);
+                    windColumns,
+                    userColumns);
             return status? RespResult.success(""): RespResult.fail();
         }catch (Exception e){
             String error = e.getMessage();

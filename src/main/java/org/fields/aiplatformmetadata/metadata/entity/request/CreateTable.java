@@ -15,6 +15,7 @@ public class CreateTable {
     private List<String> timeRange;
     private List<String> windCodes;
     private List<Column> columns;
+    private String type;
 //    private List<String> windColumns;
 //    private List<String> dbColumns;
 //    private List<String> userColumns;
