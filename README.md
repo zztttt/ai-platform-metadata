@@ -57,7 +57,7 @@ POST请求，用户创建一个新的task。task的调度详见**InitializeBean*
             "userColumn": ""
         }
     ],
-    type: "实时"
+    "type": "实时"
 }
 对于edb类型任务：（windColumn是没用的，并且windCodes和columns里的数量是一致的，因为usercolumn的作用是显式地描述windCode是什么）
 {
@@ -87,7 +87,8 @@ POST请求，用户创建一个新的task。task的调度详见**InitializeBean*
             "windColumn": "",
             "userColumn": "北京GDP：第一产业"
         }
-    ]
+    ],
+    "type": "实时"
 }
 ```
 
